@@ -6,6 +6,7 @@ import { getCookie } from 'hono/cookie'
 // Types
 type Bindings = {
   DB: D1Database
+  ADMIN_API_KEY?: string
 }
 
 type Variables = {
@@ -18,6 +19,7 @@ interface User {
   name: string
   provider: string
   is_admin: number
+  role?: string
   avatar_url?: string
 }
 
@@ -75,13 +77,37 @@ const authMiddleware = async (c: any, next: any) => {
   await next()
 }
 
-// Admin middleware
+// Dynamic Admin Lock Middleware with Master Key
 const adminMiddleware = async (c: any, next: any) => {
-  const user = c.get('user')
-  if (!user || user.is_admin !== 1) {
-    return c.json({ error: 'Unauthorized' }, 403)
+  const adminSecret = c.env.ADMIN_API_KEY
+  const providedKey = c.req.header('X-Admin-Key')
+  
+  // Check if any admin user exists in the database
+  const { results } = await c.env.DB.prepare(
+    "SELECT id FROM users WHERE role = 'admin' OR is_admin = 1 LIMIT 1"
+  ).all()
+  
+  const adminExists = results.length > 0
+  
+  if (!adminExists) {
+    // PHASE 1: No admin yet. Allow access via master key.
+    const masterKey = adminSecret || '7Intru@'
+    if (providedKey === masterKey) {
+      return await next()
+    }
+  } else {
+    // PHASE 2: Admin user added. DISABLE the security key bypass.
+    // Check for a valid session
+    const user = c.get('user')
+    if (user && (user.is_admin === 1 || user.role === 'admin')) {
+      return await next()
+    }
   }
-  await next()
+  
+  return c.json({ 
+    error: 'Unauthorized. Please log in via email or use master key (if no admin exists).', 
+    phase: adminExists ? 'secure' : 'setup'
+  }, 401)
 }
 
 // Apply auth middleware to all routes
@@ -102,9 +128,15 @@ app.post('/api/auth/login', async (c) => {
   
   // Create user if doesn't exist
   if (!user) {
+    // Check if this is the first user (will be admin)
+    const { results } = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM users
+    `).all()
+    const isFirstUser = results[0] && (results[0] as any).count === 0
+    
     const result = await c.env.DB.prepare(`
-      INSERT INTO users (email, name, provider) VALUES (?, ?, 'email')
-    `).bind(email, name || email.split('@')[0]).run()
+      INSERT INTO users (email, name, provider, role, is_admin) VALUES (?, ?, 'email', ?, ?)
+    `).bind(email, name || email.split('@')[0], isFirstUser ? 'admin' : 'customer', isFirstUser ? 1 : 0).run()
     
     user = await c.env.DB.prepare(`
       SELECT * FROM users WHERE id = ?
