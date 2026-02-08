@@ -1,0 +1,307 @@
+/* Custom styles for INTRU e-commerce */
+
+:root {
+  --primary-color: #000000;
+  --secondary-color: #667eea;
+  --text-color: #1a202c;
+  --gray-light: #f7fafc;
+  --gray-medium: #e2e8f0;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Typography */
+body {
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* Gradient animations */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-text {
+  background-size: 200% auto;
+  animation: gradient 3s ease infinite;
+}
+
+/* Button hover effects */
+button, .btn {
+  transition: all 0.3s ease;
+}
+
+button:hover, .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Card hover effects */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading {
+  animation: spin 1s linear infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Prose styling for markdown content */
+.prose {
+  max-width: 65ch;
+}
+
+.prose h1 {
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.prose h2 {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.prose h3 {
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.prose p {
+  margin-bottom: 1.25em;
+}
+
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin-bottom: 0.5em;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-medium);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e0;
+}
+
+/* Image loading */
+img {
+  loading: lazy;
+}
+
+/* Responsive typography */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Mobile menu */
+@media (max-width: 768px) {
+  nav .hidden.md\:flex {
+    display: none;
+  }
+}
+
+/* Cart sidebar animation */
+#cart-sidebar {
+  transition: transform 0.3s ease-out;
+}
+
+#cart-sidebar.hidden {
+  transform: translateX(100%);
+}
+
+/* Modal animations */
+.modal {
+  transition: opacity 0.3s ease-out;
+}
+
+.modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Product card improvements */
+.product-card {
+  transition: box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Admin table styles */
+table {
+  border-collapse: collapse;
+}
+
+table th {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Form focus styles */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: var(--primary-color);
+}
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-sale {
+  background-color: #ef4444;
+  color: white;
+}
+
+/* Footer link hover */
+footer a {
+  transition: color 0.2s ease;
+}
+
+footer a:hover {
+  color: var(--primary-color);
+}
+
+/* Notification animation */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* Hero section animation */
+.hero-content {
+  animation: fadeIn 1s ease-out;
+}
+
+/* Price display */
+.price-original {
+  position: relative;
+}
+
+.price-original::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background-color: currentColor;
+}
+
+/* Sticky navigation */
+nav.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+}
+
+/* Aspect ratio boxes */
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+
+.aspect-video {
+  aspect-ratio: 16 / 9;
+}
+
+/* Grid improvements */
+.products-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  nav,
+  footer,
+  button,
+  .no-print {
+    display: none;
+  }
+}
