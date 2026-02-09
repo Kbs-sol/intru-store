@@ -620,10 +620,7 @@ const getLayout = (title: string, content: string) => `
                     </a>
                 </div>
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="/#products" class="text-gray-700 hover:text-black font-medium transition">Shop</a>
-                    <a href="/shipping" class="text-gray-700 hover:text-black font-medium transition">Shipping</a>
-                    <a href="/returns" class="text-gray-700 hover:text-black font-medium transition">Exchanges</a>
-                    <a href="/faq" class="text-gray-700 hover:text-black font-medium transition">FAQ</a>
+                    <!-- Navigation links removed as per requirements -->
                 </div>
                 <div class="flex items-center space-x-4">
                     <button onclick="openCart()" class="text-gray-700 hover:text-gray-900 relative">
