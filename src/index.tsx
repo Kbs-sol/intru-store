@@ -543,11 +543,6 @@ app.get('/products/:slug', (c) => {
   return c.html(getLayout('Product - INTRU', getPageTemplate('product')))
 })
 
-// Brand story
-app.get('/brand-story', (c) => {
-  return c.html(getLayout('Our Story - INTRU', getPageTemplate('brand-story')))
-})
-
 // Terms & Conditions
 app.get('/terms', (c) => {
   return c.html(getLayout('Terms & Conditions - INTRU', getPageTemplate('terms')))
@@ -556,11 +551,6 @@ app.get('/terms', (c) => {
 // Returns & Exchanges
 app.get('/returns', (c) => {
   return c.html(getLayout('Returns & Exchanges - INTRU', getPageTemplate('returns')))
-})
-
-// Exchanges (redirect to returns)
-app.get('/exchanges', (c) => {
-  return c.redirect('/returns', 301)
 })
 
 // Shipping
@@ -630,9 +620,10 @@ const getLayout = (title: string, content: string) => `
                     </a>
                 </div>
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="/" class="text-gray-700 hover:text-black font-medium transition">Shop</a>
-                    <a href="/brand-story" class="text-gray-700 hover:text-black font-medium transition">Our Story</a>
+                    <a href="/#products" class="text-gray-700 hover:text-black font-medium transition">Shop</a>
+                    <a href="/shipping" class="text-gray-700 hover:text-black font-medium transition">Shipping</a>
                     <a href="/returns" class="text-gray-700 hover:text-black font-medium transition">Exchanges</a>
+                    <a href="/faq" class="text-gray-700 hover:text-black font-medium transition">FAQ</a>
                 </div>
                 <div class="flex items-center space-x-4">
                     <button onclick="openCart()" class="text-gray-700 hover:text-gray-900 relative">
@@ -774,10 +765,16 @@ const getPageTemplate = (page: string) => {
   switch (page) {
     case 'home':
       return '<div id="home-page"></div>'
-    case 'product':
-      return '<div id="product-page"></div>'
-    case 'brand-story':
-      return '<div id="brand-story-page"></div>'
+    case 'shipping':
+      return '<div id="shipping-page"></div>'
+    case 'returns':
+      return '<div id="returns-page"></div>'
+    case 'faq':
+      return '<div id="faq-page"></div>'
+    case 'terms':
+      return '<div id="terms-page"></div>'
+    case 'privacy-policy':
+      return '<div id="privacy-page"></div>'
     case 'cart':
       return '<div id="cart-page"></div>'
     case 'admin':
@@ -863,12 +860,6 @@ const getPageTemplate = (page: string) => {
           });
         </script>
       `
-    case 'terms':
-    case 'privacy-policy':
-    case 'returns':
-    case 'shipping':
-    case 'faq':
-      return `<div id="${page}-page" class="container mx-auto px-4 py-12"></div>`
     default:
       return '<div>Page not found</div>'
   }
