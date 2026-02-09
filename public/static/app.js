@@ -463,8 +463,8 @@ async function renderHomePage() {
             <div class="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
               <i class="fas fa-heart text-white text-2xl"></i>
             </div>
-            <h3 class="text-xl font-bold mb-3">Made with Love</h3>
-            <p class="text-gray-600">Every garment tells a story of passion and minimalist design</p>
+            <h3 class="text-xl font-bold mb-3">Made in Bharat</h3>
+            <p class="text-gray-600">Every garment is crafted in India with passion and minimalist design</p>
           </div>
         </div>
       </div>
@@ -532,7 +532,7 @@ function initKonamiCode() {
         document.body.appendChild(easter);
         
         setTimeout(() => {
-          window.location.href = '/setup';
+          window.location.href = '/intruadmin';
         }, 2000);
       }
     } else {

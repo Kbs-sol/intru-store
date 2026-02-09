@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/cloudflare-workers'
+import { getCookie } from 'hono/cookie'
 
 type Bindings = {
   DB: D1Database
@@ -74,7 +75,7 @@ const authMiddleware = async (c: any, next: any) => {
   
   // For other routes, check authentication
   const authHeader = c.req.header('Authorization')
-  const sessionToken = authHeader?.replace('Bearer ', '') || c.req.cookie('session_token')
+  const sessionToken = authHeader?.replace('Bearer ', '') || getCookie(c, 'session_token')
   
   if (!sessionToken) {
     if (path.startsWith('/api/')) {
@@ -114,7 +115,7 @@ const adminMiddleware = async (c: any, next: any) => {
   
   if (!adminExists) {
     // PHASE 1: No admin yet. Allow access via master key.
-    const masterKey = adminSecret || '7Intru@'
+    const masterKey = adminSecret || '7@Intru'
     if (providedKey === masterKey) {
       return await next()
     }
@@ -288,7 +289,7 @@ app.post('/api/auth/logout', async (c) => {
   
   if (user) {
     const authHeader = c.req.header('Authorization')
-    const sessionToken = authHeader?.replace('Bearer ', '') || c.req.cookie('session_token')
+    const sessionToken = authHeader?.replace('Bearer ', '') || getCookie(c, 'session_token')
     
     if (sessionToken) {
       await c.env.DB.prepare(`
@@ -579,13 +580,18 @@ app.get('/cart', (c) => {
 })
 
 // Admin dashboard
-app.get('/admin', adminMiddleware, (c) => {
+app.get('/intruadmin', adminMiddleware, (c) => {
   return c.html(getLayout('Admin Dashboard - INTRU', getPageTemplate('admin')))
 })
 
-// Setup page
+// Admin setup page
+app.get('/intruadmin/setup', (c) => {
+  return c.html(getLayout('Admin Setup - INTRU', getPageTemplate('setup')))
+})
+
+// Backward compatibility redirect
 app.get('/setup', (c) => {
-  return c.html(getLayout('Setup - INTRU', getPageTemplate('setup')))
+  return c.redirect('/intruadmin/setup', 301)
 })
 
 // ======================
@@ -633,7 +639,7 @@ const getLayout = (title: string, content: string) => `
                     <div id="user-menu" class="hidden relative">
                         <img id="user-avatar" class="w-8 h-8 rounded-full cursor-pointer" onclick="toggleUserMenu()" />
                         <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                            <a href="/admin" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin</a>
+                            <a href="/intruadmin" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin</a>
                             <button onclick="logout()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
                         </div>
                     </div>
@@ -844,7 +850,7 @@ const getPageTemplate = (page: string) => {
                 document.getElementById('setup-success').textContent = 'Admin created! Redirecting...';
                 document.getElementById('setup-success').classList.remove('hidden');
                 setTimeout(() => {
-                  window.location.href = '/admin';
+                  window.location.href = '/intruadmin';
                 }, 1500);
               } else {
                 document.getElementById('setup-error').textContent = data.error || 'Setup failed';
@@ -861,5 +867,50 @@ const getPageTemplate = (page: string) => {
       return '<div>Page not found</div>'
   }
 }
+
+// Custom 404 handler (must be last route)
+app.notFound((c) => {
+  return c.html(getLayout('404 - Page Not Found | INTRU', `
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
+      <div class="text-center max-w-2xl">
+        <div class="mb-8">
+          <div class="text-9xl font-bold text-gray-300 mb-4">404</div>
+          <h1 class="text-4xl font-bold text-gray-900 mb-4">Page Not Found</h1>
+          <p class="text-xl text-gray-600 mb-8">The page you're looking for doesn't exist or has been moved.</p>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <a href="/" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+              <i class="fas fa-home text-3xl text-gray-700 mb-2"></i>
+              <p class="text-sm font-medium">Home</p>
+            </a>
+            <a href="/#products" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+              <i class="fas fa-shopping-bag text-3xl text-gray-700 mb-2"></i>
+              <p class="text-sm font-medium">Shop</p>
+            </a>
+            <a href="/shipping" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+              <i class="fas fa-shipping-fast text-3xl text-gray-700 mb-2"></i>
+              <p class="text-sm font-medium">Shipping</p>
+            </a>
+            <a href="/faq" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+              <i class="fas fa-question-circle text-3xl text-gray-700 mb-2"></i>
+              <p class="text-sm font-medium">FAQ</p>
+            </a>
+          </div>
+          
+          <a href="/" class="inline-flex items-center px-8 py-4 bg-black text-white rounded-full hover:bg-gray-800 transition text-lg font-medium">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Home
+          </a>
+        </div>
+        
+        <div class="text-gray-500 text-sm">
+          <p>Need help? Contact us at <a href="mailto:shop@intru.in" class="text-blue-600 underline">shop@intru.in</a></p>
+        </div>
+      </div>
+    </div>
+  `), 404)
+})
 
 export default app
