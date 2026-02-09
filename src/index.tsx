@@ -1,9 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/cloudflare-workers'
-import { getCookie } from 'hono/cookie'
 
-// Types
 type Bindings = {
   DB: D1Database
   ADMIN_API_KEY?: string
@@ -13,17 +11,18 @@ type Variables = {
   user?: User
 }
 
-interface User {
+type User = {
   id: number
   email: string
   name: string
   provider: string
+  role: string
   is_admin: number
-  role?: string
   avatar_url?: string
+  created_at: string
 }
 
-interface Product {
+type Product = {
   id: number
   name: string
   slug: string
@@ -33,13 +32,14 @@ interface Product {
   image_url: string
   image_url_2?: string
   razorpay_link?: string
-  category: string
+  category?: string
   is_featured: number
   is_active: number
   stock: number
+  created_at: string
 }
 
-interface Page {
+type Page = {
   id: number
   slug: string
   title: string
@@ -47,6 +47,8 @@ interface Page {
   meta_title?: string
   meta_description?: string
   is_active: number
+  created_at: string
+  updated_at: string
 }
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -57,37 +59,58 @@ app.use('/api/*', cors())
 // Serve static files
 app.use('/static/*', serveStatic({ root: './public' }))
 
-// Auth middleware
+// ======================
+// AUTHENTICATION MIDDLEWARE
+// ======================
+
 const authMiddleware = async (c: any, next: any) => {
-  const sessionToken = c.req.header('Authorization')?.replace('Bearer ', '') || 
-                       getCookie(c, 'session_token')
+  // Allow public access to certain paths
+  const publicPaths = ['/', '/products', '/brand-story', '/terms', '/privacy', '/returns', '/exchanges', '/shipping', '/faq', '/contact', '/api/products', '/api/pages']
+  const path = c.req.path
   
-  if (sessionToken) {
+  if (publicPaths.some(p => path === p || path.startsWith('/products/'))) {
+    return await next()
+  }
+  
+  // For other routes, check authentication
+  const authHeader = c.req.header('Authorization')
+  const sessionToken = authHeader?.replace('Bearer ', '') || c.req.cookie('session_token')
+  
+  if (!sessionToken) {
+    if (path.startsWith('/api/')) {
+      return c.json({ error: 'Not authenticated' }, 401)
+    }
+    return await next() // Allow HTML pages to load, JS will handle auth
+  }
+  
+  try {
     const session = await c.env.DB.prepare(`
-      SELECT u.* FROM users u
-      INNER JOIN sessions s ON u.id = s.user_id
+      SELECT s.*, u.* FROM sessions s
+      JOIN users u ON s.user_id = u.id
       WHERE s.session_token = ? AND s.expires_at > datetime('now')
     `).bind(sessionToken).first()
     
     if (session) {
       c.set('user', session as User)
     }
+  } catch (error) {
+    console.error('Auth error:', error)
   }
   
   await next()
 }
 
-// Dynamic Admin Lock Middleware with Master Key
+// Admin middleware with dynamic security toggle
 const adminMiddleware = async (c: any, next: any) => {
-  const adminSecret = c.env.ADMIN_API_KEY
+  // Check if X-Admin-Key header is provided
   const providedKey = c.req.header('X-Admin-Key')
+  const adminSecret = c.env.ADMIN_API_KEY
   
-  // Check if any admin user exists in the database
-  const { results } = await c.env.DB.prepare(
-    "SELECT id FROM users WHERE role = 'admin' OR is_admin = 1 LIMIT 1"
-  ).all()
-  
-  const adminExists = results.length > 0
+  // Query if any admin user exists
+  const { results } = await c.env.DB.prepare(`
+    SELECT COUNT(*) as count FROM users WHERE role = 'admin'
+  `).all()
+  const adminExists = results.length > 0 && (results[0] as any).count > 0
   
   if (!adminExists) {
     // PHASE 1: No admin yet. Allow access via master key.
@@ -110,8 +133,69 @@ const adminMiddleware = async (c: any, next: any) => {
   }, 401)
 }
 
-// Apply auth middleware to all routes
-app.use('*', authMiddleware)
+// Apply auth middleware to all routes EXCEPT setup
+app.use('*', async (c, next) => {
+  // Allow public access to setup page
+  if (c.req.path === '/setup' || c.req.path.startsWith('/api/setup')) {
+    return await next()
+  }
+  return authMiddleware(c, next)
+})
+
+// ======================
+// SETUP ROUTES (for initial admin creation)
+// ======================
+
+// Check if setup is needed
+app.get('/api/setup/check', async (c) => {
+  const { results } = await c.env.DB.prepare(`
+    SELECT COUNT(*) as count FROM users WHERE role = 'admin'
+  `).all()
+  const adminExists = results[0] && (results[0] as any).count > 0
+  
+  return c.json({ setupNeeded: !adminExists })
+})
+
+// Create first admin (only if no admin exists)
+app.post('/api/setup/create-admin', async (c) => {
+  // Check if admin already exists
+  const { results } = await c.env.DB.prepare(`
+    SELECT COUNT(*) as count FROM users WHERE role = 'admin'
+  `).all()
+  const adminExists = results[0] && (results[0] as any).count > 0
+  
+  if (adminExists) {
+    return c.json({ error: 'Admin already exists' }, 400)
+  }
+  
+  const { email, name, password } = await c.req.json()
+  
+  // Verify master key
+  if (password !== '7Intru@') {
+    return c.json({ error: 'Invalid master key' }, 403)
+  }
+  
+  // Create admin user
+  const result = await c.env.DB.prepare(`
+    INSERT INTO users (email, name, provider, role, is_admin) 
+    VALUES (?, ?, 'email', 'admin', 1)
+  `).bind(email, name).run()
+  
+  // Create session
+  const sessionToken = crypto.randomUUID()
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  
+  await c.env.DB.prepare(`
+    INSERT INTO sessions (user_id, session_token, expires_at)
+    VALUES (?, ?, ?)
+  `).bind(result.meta.last_row_id, sessionToken, expiresAt).run()
+  
+  const user = await c.env.DB.prepare(`
+    SELECT * FROM users WHERE id = ?
+  `).bind(result.meta.last_row_id).first() as User
+  
+  return c.json({ user, sessionToken })
+})
 
 // ======================
 // AUTH ROUTES
@@ -145,11 +229,12 @@ app.post('/api/auth/login', async (c) => {
   
   // Create session
   const sessionToken = crypto.randomUUID()
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   
   await c.env.DB.prepare(`
-    INSERT INTO sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)
-  `).bind(user.id, sessionToken, expiresAt).run()
+    INSERT INTO sessions (user_id, session_token, expires_at)
+    VALUES (?, ?, ?)
+  `).bind(user!.id, sessionToken, expiresAt).run()
   
   return c.json({ user, sessionToken })
 })
@@ -160,28 +245,18 @@ app.post('/api/auth/oauth', async (c) => {
   
   // Check if user exists
   let user = await c.env.DB.prepare(`
-    SELECT * FROM users WHERE provider = ? AND provider_id = ?
-  `).bind(provider, provider_id).first() as User | null
+    SELECT * FROM users WHERE email = ? AND provider = ?
+  `).bind(email, provider).first() as User | null
   
-  // Create or update user
+  // Create user if doesn't exist
   if (!user) {
     const result = await c.env.DB.prepare(`
-      INSERT INTO users (email, name, provider, provider_id, avatar_url) 
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(email, name, provider, provider_id, avatar_url).run()
+      INSERT INTO users (email, name, provider, avatar_url, role, is_admin) VALUES (?, ?, ?, ?, 'customer', 0)
+    `).bind(email, name, provider, avatar_url || null).run()
     
     user = await c.env.DB.prepare(`
       SELECT * FROM users WHERE id = ?
     `).bind(result.meta.last_row_id).first() as User
-  } else {
-    // Update user info
-    await c.env.DB.prepare(`
-      UPDATE users SET name = ?, avatar_url = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `).bind(name, avatar_url, user.id).run()
-    
-    user.name = name
-    user.avatar_url = avatar_url
   }
   
   // Create session
@@ -189,63 +264,52 @@ app.post('/api/auth/oauth', async (c) => {
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   
   await c.env.DB.prepare(`
-    INSERT INTO sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)
-  `).bind(user.id, sessionToken, expiresAt).run()
+    INSERT INTO sessions (user_id, session_token, expires_at)
+    VALUES (?, ?, ?)
+  `).bind(user!.id, sessionToken, expiresAt).run()
   
   return c.json({ user, sessionToken })
-})
-
-// Logout
-app.post('/api/auth/logout', async (c) => {
-  const sessionToken = c.req.header('Authorization')?.replace('Bearer ', '') || 
-                       c.req.cookie('session_token')
-  
-  if (sessionToken) {
-    await c.env.DB.prepare(`
-      DELETE FROM sessions WHERE session_token = ?
-    `).bind(sessionToken).run()
-  }
-  
-  return c.json({ success: true })
 })
 
 // Get current user
 app.get('/api/auth/me', async (c) => {
   const user = c.get('user')
+  
   if (!user) {
     return c.json({ error: 'Not authenticated' }, 401)
   }
+  
   return c.json({ user })
 })
 
+// Logout
+app.post('/api/auth/logout', async (c) => {
+  const user = c.get('user')
+  
+  if (user) {
+    const authHeader = c.req.header('Authorization')
+    const sessionToken = authHeader?.replace('Bearer ', '') || c.req.cookie('session_token')
+    
+    if (sessionToken) {
+      await c.env.DB.prepare(`
+        DELETE FROM sessions WHERE session_token = ?
+      `).bind(sessionToken).run()
+    }
+  }
+  
+  return c.json({ success: true })
+})
+
 // ======================
-// PRODUCTS ROUTES
+// PRODUCT ROUTES
 // ======================
 
 // Get all products
 app.get('/api/products', async (c) => {
-  const featured = c.req.query('featured')
-  const category = c.req.query('category')
+  const { results } = await c.env.DB.prepare(`
+    SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC
+  `).all()
   
-  let query = 'SELECT * FROM products WHERE is_active = 1'
-  const params: any[] = []
-  
-  if (featured === 'true') {
-    query += ' AND is_featured = 1'
-  }
-  
-  if (category) {
-    query += ' AND category = ?'
-    params.push(category)
-  }
-  
-  query += ' ORDER BY created_at DESC'
-  
-  const stmt = params.length > 0 
-    ? c.env.DB.prepare(query).bind(...params)
-    : c.env.DB.prepare(query)
-  
-  const { results } = await stmt.all()
   return c.json({ products: results })
 })
 
@@ -268,7 +332,7 @@ app.get('/api/products/:slug', async (c) => {
 // CART ROUTES
 // ======================
 
-// Get user cart
+// Get cart items
 app.get('/api/cart', async (c) => {
   const user = c.get('user')
   if (!user) {
@@ -276,12 +340,10 @@ app.get('/api/cart', async (c) => {
   }
   
   const { results } = await c.env.DB.prepare(`
-    SELECT 
-      c.id, c.quantity, c.created_at,
-      p.id as product_id, p.name, p.slug, p.price, p.image_url, p.razorpay_link
-    FROM cart_items c
-    INNER JOIN products p ON c.product_id = p.id
-    WHERE c.user_id = ?
+    SELECT ci.*, p.name, p.price, p.image_url 
+    FROM cart_items ci
+    JOIN products p ON ci.product_id = p.id
+    WHERE ci.user_id = ?
   `).bind(user.id).all()
   
   return c.json({ items: results })
@@ -296,7 +358,7 @@ app.post('/api/cart', async (c) => {
   
   const { product_id, quantity } = await c.req.json()
   
-  // Check if already in cart
+  // Check if item already exists in cart
   const existing = await c.env.DB.prepare(`
     SELECT * FROM cart_items WHERE user_id = ? AND product_id = ?
   `).bind(user.id, product_id).first()
@@ -304,11 +366,10 @@ app.post('/api/cart', async (c) => {
   if (existing) {
     // Update quantity
     await c.env.DB.prepare(`
-      UPDATE cart_items SET quantity = quantity + ?, updated_at = datetime('now')
-      WHERE id = ?
-    `).bind(quantity, (existing as any).id).run()
+      UPDATE cart_items SET quantity = quantity + ? WHERE user_id = ? AND product_id = ?
+    `).bind(quantity, user.id, product_id).run()
   } else {
-    // Insert new
+    // Insert new item
     await c.env.DB.prepare(`
       INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, ?)
     `).bind(user.id, product_id, quantity).run()
@@ -328,14 +389,13 @@ app.put('/api/cart/:id', async (c) => {
   const { quantity } = await c.req.json()
   
   await c.env.DB.prepare(`
-    UPDATE cart_items SET quantity = ?, updated_at = datetime('now')
-    WHERE id = ? AND user_id = ?
+    UPDATE cart_items SET quantity = ? WHERE id = ? AND user_id = ?
   `).bind(quantity, id, user.id).run()
   
   return c.json({ success: true })
 })
 
-// Remove from cart
+// Delete cart item
 app.delete('/api/cart/:id', async (c) => {
   const user = c.get('user')
   if (!user) {
@@ -399,38 +459,36 @@ app.get('/api/admin/products', adminMiddleware, async (c) => {
 
 // Create product (admin)
 app.post('/api/admin/products', adminMiddleware, async (c) => {
-  const data = await c.req.json()
+  const { name, slug, description, price, original_price, image_url, image_url_2, razorpay_link, category, is_featured, stock } = await c.req.json()
   
   const result = await c.env.DB.prepare(`
-    INSERT INTO products (name, slug, description, price, original_price, image_url, image_url_2, razorpay_link, category, is_featured, stock)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).bind(
-    data.name, data.slug, data.description, data.price, data.original_price,
-    data.image_url, data.image_url_2, data.razorpay_link, data.category,
-    data.is_featured ? 1 : 0, data.stock || 100
-  ).run()
+    INSERT INTO products (name, slug, description, price, original_price, image_url, image_url_2, razorpay_link, category, is_featured, is_active, stock)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+  `).bind(name, slug, description, price, original_price, image_url, image_url_2 || null, razorpay_link || null, category || null, is_featured ? 1 : 0, stock).run()
   
-  return c.json({ id: result.meta.last_row_id })
+  const product = await c.env.DB.prepare(`
+    SELECT * FROM products WHERE id = ?
+  `).bind(result.meta.last_row_id).first()
+  
+  return c.json({ product })
 })
 
 // Update product (admin)
 app.put('/api/admin/products/:id', adminMiddleware, async (c) => {
   const id = c.req.param('id')
-  const data = await c.req.json()
+  const { name, slug, description, price, original_price, image_url, image_url_2, razorpay_link, category, is_featured, is_active, stock } = await c.req.json()
   
   await c.env.DB.prepare(`
     UPDATE products 
-    SET name = ?, slug = ?, description = ?, price = ?, original_price = ?,
-        image_url = ?, image_url_2 = ?, razorpay_link = ?, category = ?,
-        is_featured = ?, stock = ?, updated_at = datetime('now')
+    SET name = ?, slug = ?, description = ?, price = ?, original_price = ?, image_url = ?, image_url_2 = ?, razorpay_link = ?, category = ?, is_featured = ?, is_active = ?, stock = ?, updated_at = datetime('now')
     WHERE id = ?
-  `).bind(
-    data.name, data.slug, data.description, data.price, data.original_price,
-    data.image_url, data.image_url_2, data.razorpay_link, data.category,
-    data.is_featured ? 1 : 0, data.stock, id
-  ).run()
+  `).bind(name, slug, description, price, original_price, image_url, image_url_2 || null, razorpay_link || null, category || null, is_featured ? 1 : 0, is_active ? 1 : 0, stock, id).run()
   
-  return c.json({ success: true })
+  const product = await c.env.DB.prepare(`
+    SELECT * FROM products WHERE id = ?
+  `).bind(id).first()
+  
+  return c.json({ product })
 })
 
 // Delete product (admin)
@@ -438,7 +496,7 @@ app.delete('/api/admin/products/:id', adminMiddleware, async (c) => {
   const id = c.req.param('id')
   
   await c.env.DB.prepare(`
-    UPDATE products SET is_active = 0 WHERE id = ?
+    DELETE FROM products WHERE id = ?
   `).bind(id).run()
   
   return c.json({ success: true })
@@ -447,7 +505,7 @@ app.delete('/api/admin/products/:id', adminMiddleware, async (c) => {
 // Get all pages (admin)
 app.get('/api/admin/pages', adminMiddleware, async (c) => {
   const { results } = await c.env.DB.prepare(`
-    SELECT * FROM pages ORDER BY slug
+    SELECT * FROM pages ORDER BY created_at DESC
   `).all()
   
   return c.json({ pages: results })
@@ -456,73 +514,101 @@ app.get('/api/admin/pages', adminMiddleware, async (c) => {
 // Update page (admin)
 app.put('/api/admin/pages/:id', adminMiddleware, async (c) => {
   const id = c.req.param('id')
-  const data = await c.req.json()
+  const { title, content, meta_title, meta_description } = await c.req.json()
   
   await c.env.DB.prepare(`
     UPDATE pages 
     SET title = ?, content = ?, meta_title = ?, meta_description = ?, updated_at = datetime('now')
     WHERE id = ?
-  `).bind(data.title, data.content, data.meta_title, data.meta_description, id).run()
+  `).bind(title, content, meta_title || null, meta_description || null, id).run()
+  
+  const page = await c.env.DB.prepare(`
+    SELECT * FROM pages WHERE id = ?
+  `).bind(id).first()
   
   return c.json({ success: true })
 })
 
 // ======================
-// FRONTEND ROUTES
+// FRONTEND PAGES
 // ======================
 
-// Homepage
+// Home page
 app.get('/', (c) => {
-  return c.html(getLayout('Home', getHomePage()))
+  return c.html(getLayout('INTRU - Shop', getPageTemplate('home')))
 })
 
 // Product page
 app.get('/products/:slug', (c) => {
-  return c.html(getLayout('Product', getProductPage()))
+  return c.html(getLayout('Product - INTRU', getPageTemplate('product')))
 })
 
 // Brand story
 app.get('/brand-story', (c) => {
-  return c.html(getLayout('Our Story', getPageTemplate('brand-story')))
+  return c.html(getLayout('Our Story - INTRU', getPageTemplate('brand-story')))
 })
 
-// Terms and conditions
+// Terms & Conditions
 app.get('/terms', (c) => {
-  return c.html(getLayout('Terms & Conditions', getPageTemplate('terms-and-conditions')))
+  return c.html(getLayout('Terms & Conditions - INTRU', getPageTemplate('terms')))
+})
+
+// Returns & Exchanges
+app.get('/returns', (c) => {
+  return c.html(getLayout('Returns & Exchanges - INTRU', getPageTemplate('returns')))
+})
+
+// Exchanges (redirect to returns)
+app.get('/exchanges', (c) => {
+  return c.redirect('/returns', 301)
+})
+
+// Shipping
+app.get('/shipping', (c) => {
+  return c.html(getLayout('Shipping Policy - INTRU', getPageTemplate('shipping')))
+})
+
+// FAQ
+app.get('/faq', (c) => {
+  return c.html(getLayout('FAQ - INTRU', getPageTemplate('faq')))
+})
+
+// Contact (redirect to FAQ with mailto link)
+app.get('/contact', (c) => {
+  return c.redirect('/faq', 301)
 })
 
 // Privacy policy
 app.get('/privacy', (c) => {
-  return c.html(getLayout('Privacy Policy', getPageTemplate('privacy-policy')))
-})
-
-// Return and exchange
-app.get('/returns', (c) => {
-  return c.html(getLayout('Return & Exchange', getPageTemplate('return-and-exchange')))
+  return c.html(getLayout('Privacy Policy - INTRU', getPageTemplate('privacy-policy')))
 })
 
 // Cart page
 app.get('/cart', (c) => {
-  return c.html(getLayout('Cart', getCartPage()))
+  return c.html(getLayout('Shopping Cart - INTRU', getPageTemplate('cart')))
 })
 
 // Admin dashboard
-app.get('/admin', (c) => {
-  return c.html(getLayout('Admin Dashboard', getAdminPage()))
+app.get('/admin', adminMiddleware, (c) => {
+  return c.html(getLayout('Admin Dashboard - INTRU', getPageTemplate('admin')))
+})
+
+// Setup page
+app.get('/setup', (c) => {
+  return c.html(getLayout('Setup - INTRU', getPageTemplate('setup')))
 })
 
 // ======================
-// HTML TEMPLATES
+// HTML LAYOUT & TEMPLATES
 // ======================
 
-function getLayout(title: string, content: string) {
-  return `
+const getLayout = (title: string, content: string) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title} - INTRU</title>
+    <title>${title}</title>
     <meta name="description" content="INTRU - Built from scratch with a shared love for minimalism & everyday style">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
@@ -530,30 +616,23 @@ function getLayout(title: string, content: string) {
     <link href="/static/styles.css" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-white">
+<body class="bg-gray-50">
     <!-- Navigation -->
-    <nav class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-gray-100">
+    <nav class="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-200/50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <a href="/" class="text-2xl font-bold tracking-tight">INTRU</a>
+                <div class="flex items-center space-x-8">
+                    <a href="/" class="text-2xl font-bold tracking-tight hover:text-gray-700 transition">
+                        <span class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">INTRU</span>
+                    </a>
                 </div>
-                <div class="hidden md:flex space-x-8">
-                    <a href="/" class="text-gray-700 hover:text-gray-900">Shop</a>
-                    <a href="/brand-story" class="text-gray-700 hover:text-gray-900">Our Story</a>
-                    <a href="/terms" class="text-gray-700 hover:text-gray-900">Terms</a>
-                    <a href="/returns" class="text-gray-700 hover:text-gray-900">Returns</a>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/" class="text-gray-700 hover:text-black font-medium transition">Shop</a>
+                    <a href="/brand-story" class="text-gray-700 hover:text-black font-medium transition">Our Story</a>
+                    <a href="/returns" class="text-gray-700 hover:text-black font-medium transition">Exchanges</a>
                 </div>
                 <div class="flex items-center space-x-4">
                     <button onclick="openCart()" class="text-gray-700 hover:text-gray-900 relative">
@@ -590,332 +669,209 @@ function getLayout(title: string, content: string) {
                 </div>
                 <div>
                     <h4 class="font-semibold mb-4">Shop</h4>
-                    <ul class="space-y-2 text-sm text-gray-600">
-                        <li><a href="/">All Products</a></li>
-                        <li><a href="/?category=T-Shirts">T-Shirts</a></li>
-                        <li><a href="/?category=Shirts">Shirts</a></li>
-                        <li><a href="/?category=Tops">Tops</a></li>
+                    <ul class="space-y-2 text-gray-600 text-sm">
+                        <li><a href="/" class="hover:text-black">All Products</a></li>
+                        <li><a href="/brand-story" class="hover:text-black">Our Story</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="font-semibold mb-4">About</h4>
-                    <ul class="space-y-2 text-sm text-gray-600">
-                        <li><a href="/brand-story">Brand Story</a></li>
-                        <li><a href="/terms">Terms & Conditions</a></li>
-                        <li><a href="/privacy">Privacy Policy</a></li>
-                        <li><a href="/returns">Returns & Exchange</a></li>
+                    <h4 class="font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-600 text-sm">
+                        <li><a href="/shipping" class="hover:text-black">Shipping</a></li>
+                        <li><a href="/returns" class="hover:text-black">Exchanges</a></li>
+                        <li><a href="/faq" class="hover:text-black">FAQ</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="font-semibold mb-4">Connect</h4>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-600 hover:text-gray-900"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="text-gray-600 hover:text-gray-900"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="text-gray-600 hover:text-gray-900"><i class="fab fa-twitter"></i></a>
-                    </div>
+                    <h4 class="font-semibold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-gray-600 text-sm">
+                        <li><a href="/terms" class="hover:text-black">Terms</a></li>
+                        <li><a href="/privacy" class="hover:text-black">Privacy</a></li>
+                    </ul>
                 </div>
             </div>
-            <div class="border-t border-gray-200 mt-8 pt-8 text-center text-sm text-gray-600">
-                <p>&copy; 2026 INTRU. All rights reserved.</p>
+            <div class="border-t border-gray-200 mt-8 pt-8 text-center text-gray-600 text-sm">
+                <p>© ${new Date().getFullYear()} INTRU. All rights reserved. | Contact: <a href="mailto:shop@intru.in" class="hover:text-black">shop@intru.in</a></p>
             </div>
         </div>
     </footer>
 
-    <!-- Auth Modal -->
+    <!-- Login Modal -->
     <div id="auth-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Sign In</h2>
+                <h2 class="text-2xl font-bold">Login</h2>
                 <button onclick="closeAuthModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             
-            <!-- Google One Tap -->
-            <div id="g_id_onload"
-                 data-client_id="YOUR_GOOGLE_CLIENT_ID"
-                 data-context="signin"
-                 data-ux_mode="popup"
-                 data-callback="handleGoogleLogin"
-                 data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" 
-                 data-type="standard"
-                 data-shape="rectangular"
-                 data-theme="outline"
-                 data-text="signin_with"
-                 data-size="large"
-                 data-logo_alignment="left">
-            </div>
-            
-            <div class="my-4 text-center text-gray-500">or</div>
-            
-            <!-- Instagram Login -->
-            <button onclick="loginInstagram()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg mb-3 font-medium hover:opacity-90">
-                <i class="fab fa-instagram mr-2"></i> Continue with Instagram
-            </button>
-            
-            <div class="my-4 text-center text-gray-500">or</div>
-            
-            <!-- Email Login -->
-            <form onsubmit="loginEmail(event)" class="space-y-4">
-                <input type="email" id="email-input" placeholder="Email" required
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent">
-                <input type="text" id="name-input" placeholder="Name (optional)"
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent">
-                <button type="submit" class="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800">
-                    Continue with Email
+            <div class="space-y-4">
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                     data-callback="handleGoogleLogin">
+                </div>
+                <div class="g_id_signin" data-type="standard"></div>
+                
+                <button onclick="loginInstagram()" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg hover:opacity-90 transition">
+                    <i class="fab fa-instagram mr-2"></i> Continue with Instagram
                 </button>
-            </form>
+                
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">Or continue with email</span>
+                    </div>
+                </div>
+                
+                <form onsubmit="loginEmail(event)" class="space-y-4">
+                    <input type="email" id="email-input" placeholder="Email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent">
+                    <input type="text" id="name-input" placeholder="Name (optional)" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent">
+                    <button type="submit" class="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition">
+                        Login with Email
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- Cart Sidebar -->
-    <div id="cart-sidebar" class="hidden fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-xl z-50 overflow-y-auto">
-        <div class="p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Shopping Cart</h2>
-                <button onclick="closeCart()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div id="cart-items" class="space-y-4 mb-6">
-                <!-- Cart items will be inserted here -->
-            </div>
-            <div class="border-t pt-4">
-                <div class="flex justify-between text-lg font-bold mb-4">
-                    <span>Total</span>
-                    <span id="cart-total">₹0</span>
+    <div id="cart-sidebar" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+        <div class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl">
+            <div class="flex flex-col h-full">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h2 class="text-xl font-bold">Shopping Cart</h2>
+                    <button onclick="closeCart()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <button onclick="checkout()" class="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800">
-                    Checkout
-                </button>
+                
+                <div id="cart-items" class="flex-1 overflow-y-auto p-6">
+                    <!-- Cart items will be inserted here -->
+                </div>
+                
+                <div class="border-t p-6">
+                    <div class="flex justify-between mb-4">
+                        <span class="font-semibold">Total:</span>
+                        <span id="cart-total" class="font-bold text-xl">₹0</span>
+                    </div>
+                    <button onclick="checkout()" class="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition">
+                        Checkout
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     <script src="/static/app.js"></script>
 </body>
 </html>
-  `
-}
+`
 
-function getHomePage() {
-  return `
-    <!-- Hero Section -->
-    <section class="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        <div class="text-center px-4">
-            <h1 class="text-5xl md:text-7xl font-bold mb-6 gradient-text">
-                STYLE REDEFINED
-            </h1>
-            <p class="text-xl md:text-2xl text-gray-600 mb-8">
-                Effortlessly Yours
-            </p>
-            <a href="#products" class="inline-block bg-black text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition">
-                Shop Now
-            </a>
-        </div>
-    </section>
+const getPageTemplate = (page: string) => {
+  switch (page) {
+    case 'home':
+      return '<div id="home-page"></div>'
+    case 'product':
+      return '<div id="product-page"></div>'
+    case 'brand-story':
+      return '<div id="brand-story-page"></div>'
+    case 'cart':
+      return '<div id="cart-page"></div>'
+    case 'admin':
+      return '<div id="admin-page"></div>'
+    case 'setup':
+      return `
+        <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+          <div class="max-w-md w-full space-y-8">
+            <div>
+              <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Setup Admin Account
+              </h2>
+              <p class="mt-2 text-center text-sm text-gray-600">
+                Create the first admin account to manage your store
+              </p>
+            </div>
+            <form id="setup-form" class="mt-8 space-y-6">
+              <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                  <label for="setup-email" class="sr-only">Email address</label>
+                  <input id="setup-email" name="email" type="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm" placeholder="Email address">
+                </div>
+                <div>
+                  <label for="setup-name" class="sr-only">Full name</label>
+                  <input id="setup-name" name="name" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm" placeholder="Full name">
+                </div>
+                <div>
+                  <label for="setup-password" class="sr-only">Master Key</label>
+                  <input id="setup-password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm" placeholder="Master Key: 7Intru@">
+                </div>
+              </div>
 
-    <!-- Products Section -->
-    <section id="products" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold mb-4">New Arrivals</h2>
-            <p class="text-gray-600">Shop the Latest Styles: Stay ahead of the curve with our newest arrivals</p>
+              <div>
+                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
+                  Create Admin Account
+                </button>
+              </div>
+              
+              <div id="setup-error" class="hidden text-red-600 text-sm text-center"></div>
+              <div id="setup-success" class="hidden text-green-600 text-sm text-center"></div>
+            </form>
+          </div>
         </div>
         
-        <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Products will be loaded here -->
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="bg-gray-50 py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-                <div>
-                    <div class="text-4xl mb-4"><i class="fas fa-shipping-fast"></i></div>
-                    <h3 class="font-semibold mb-2">Free Shipping</h3>
-                    <p class="text-sm text-gray-600">Orders above ₹2000</p>
-                </div>
-                <div>
-                    <div class="text-4xl mb-4"><i class="fas fa-undo"></i></div>
-                    <h3 class="font-semibold mb-2">Money-back</h3>
-                    <p class="text-sm text-gray-600">7 day Guarantee</p>
-                </div>
-                <div>
-                    <div class="text-4xl mb-4"><i class="fas fa-headset"></i></div>
-                    <h3 class="font-semibold mb-2">Premium Support</h3>
-                    <p class="text-sm text-gray-600">Email support</p>
-                </div>
-                <div>
-                    <div class="text-4xl mb-4"><i class="fas fa-lock"></i></div>
-                    <h3 class="font-semibold mb-2">Secure Payments</h3>
-                    <p class="text-sm text-gray-600">Secured by Razorpay</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <script>
-        // Load products on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            loadProducts();
-        });
-    </script>
-  `
-}
-
-function getProductPage() {
-  return `
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div id="product-detail">
-            <!-- Product details will be loaded here -->
-        </div>
-    </section>
-
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            loadProductDetail();
-        });
-    </script>
-  `
-}
-
-function getPageTemplate(slug: string) {
-  return `
-    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div id="page-content" class="prose prose-lg max-w-none">
-            <!-- Page content will be loaded here -->
-        </div>
-    </section>
-
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            loadPage('${slug}');
-        });
-    </script>
-  `
-}
-
-function getCartPage() {
-  return `
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 class="text-4xl font-bold mb-8">Shopping Cart</h1>
-        <div id="cart-page-content">
-            <!-- Cart content will be loaded here -->
-        </div>
-    </section>
-
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            loadCartPage();
-        });
-    </script>
-  `
-}
-
-function getAdminPage() {
-  return `
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 class="text-4xl font-bold mb-8">Admin Dashboard</h1>
-        
-        <div class="mb-8">
-            <div class="border-b border-gray-200">
-                <nav class="-mb-px flex space-x-8">
-                    <button onclick="showAdminTab('products')" class="admin-tab active border-b-2 border-black py-4 px-1 text-sm font-medium">
-                        Products
-                    </button>
-                    <button onclick="showAdminTab('pages')" class="admin-tab border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                        Pages
-                    </button>
-                </nav>
-            </div>
-        </div>
-
-        <div id="admin-products" class="admin-panel">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Products</h2>
-                <button onclick="openProductModal()" class="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800">
-                    Add Product
-                </button>
-            </div>
-            <div id="products-list">
-                <!-- Products list will be loaded here -->
-            </div>
-        </div>
-
-        <div id="admin-pages" class="admin-panel hidden">
-            <h2 class="text-2xl font-bold mb-6">Pages</h2>
-            <div id="pages-list">
-                <!-- Pages list will be loaded here -->
-            </div>
-        </div>
-    </section>
-
-    <!-- Product Modal -->
-    <div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Product Details</h2>
-                <button onclick="closeProductModal()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="product-form" class="space-y-4">
-                <input type="hidden" id="product-id">
-                <input type="text" id="product-name" placeholder="Product Name" required class="w-full px-4 py-2 border rounded-lg">
-                <input type="text" id="product-slug" placeholder="Slug (e.g., doodles-tshirt)" required class="w-full px-4 py-2 border rounded-lg">
-                <textarea id="product-description" placeholder="Description" rows="3" class="w-full px-4 py-2 border rounded-lg"></textarea>
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="number" id="product-price" placeholder="Price" required class="w-full px-4 py-2 border rounded-lg">
-                    <input type="number" id="product-original-price" placeholder="Original Price" class="w-full px-4 py-2 border rounded-lg">
-                </div>
-                <input type="text" id="product-image" placeholder="Image URL" required class="w-full px-4 py-2 border rounded-lg">
-                <input type="text" id="product-image-2" placeholder="Second Image URL" class="w-full px-4 py-2 border rounded-lg">
-                <input type="text" id="product-razorpay" placeholder="Razorpay Buy Now Link" class="w-full px-4 py-2 border rounded-lg">
-                <input type="text" id="product-category" placeholder="Category" class="w-full px-4 py-2 border rounded-lg">
-                <div class="flex items-center">
-                    <input type="checkbox" id="product-featured" class="mr-2">
-                    <label for="product-featured">Featured Product</label>
-                </div>
-                <button type="submit" class="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800">
-                    Save Product
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Page Modal -->
-    <div id="page-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg p-8 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Edit Page</h2>
-                <button onclick="closePageModal()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="page-form" class="space-y-4">
-                <input type="hidden" id="page-id">
-                <input type="text" id="page-title" placeholder="Page Title" required class="w-full px-4 py-2 border rounded-lg">
-                <textarea id="page-content" placeholder="Content (Markdown supported)" rows="15" required class="w-full px-4 py-2 border rounded-lg font-mono text-sm"></textarea>
-                <input type="text" id="page-meta-title" placeholder="Meta Title (SEO)" class="w-full px-4 py-2 border rounded-lg">
-                <textarea id="page-meta-description" placeholder="Meta Description (SEO)" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
-                <button type="submit" class="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800">
-                    Save Page
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            checkAdminAuth();
-            loadAdminProducts();
-        });
-    </script>
-  `
+        <script>
+          document.getElementById('setup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('setup-email').value;
+            const name = document.getElementById('setup-name').value;
+            const password = document.getElementById('setup-password').value;
+            
+            if (password !== '7Intru@') {
+              document.getElementById('setup-error').textContent = 'Invalid master key';
+              document.getElementById('setup-error').classList.remove('hidden');
+              return;
+            }
+            
+            try {
+              const response = await fetch('/api/setup/create-admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, name, password })
+              });
+              
+              const data = await response.json();
+              
+              if (response.ok) {
+                localStorage.setItem('session_token', data.sessionToken);
+                document.getElementById('setup-success').textContent = 'Admin created! Redirecting...';
+                document.getElementById('setup-success').classList.remove('hidden');
+                setTimeout(() => {
+                  window.location.href = '/admin';
+                }, 1500);
+              } else {
+                document.getElementById('setup-error').textContent = data.error || 'Setup failed';
+                document.getElementById('setup-error').classList.remove('hidden');
+              }
+            } catch (error) {
+              document.getElementById('setup-error').textContent = 'Setup failed. Please try again.';
+              document.getElementById('setup-error').classList.remove('hidden');
+            }
+          });
+        </script>
+      `
+    case 'terms':
+    case 'privacy-policy':
+    case 'returns':
+    case 'shipping':
+    case 'faq':
+      return `<div id="${page}-page" class="container mx-auto px-4 py-12"></div>`
+    default:
+      return '<div>Page not found</div>'
+  }
 }
 
 export default app

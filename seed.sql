@@ -7,503 +7,328 @@ INSERT OR IGNORE INTO products (id, name, slug, description, price, original_pri
   (5, 'Stripe 18 Shirt', 'stripe-18-shirt', 'Classic striped shirt with a contemporary twist. Versatile piece for any wardrobe.', 1099.00, 1699.00, 'https://cdn.shopify.com/s/files/1/0622/3628/2180/files/DSC05899.jpg?v=1730302024', 'https://cdn.shopify.com/s/files/1/0622/3628/2180/files/DSC05895.jpg?v=1730302024', 'Shirts', 0, 1, 100),
   (6, 'Summer Shirt', 'summer-shirt', 'Light and breezy summer shirt. Your go-to for casual summer days.', 999.00, 1599.00, 'https://cdn.shopify.com/s/files/1/0622/3628/2180/files/DSC05865.jpg?v=1730302047', 'https://cdn.shopify.com/s/files/1/0622/3628/2180/files/DSC05862.jpg?v=1730302047', 'Shirts', 0, 1, 100);
 
--- Note: No default admin user inserted. First user will become admin automatically.
-
--- Insert enhanced pages with content from intru.in
+-- Insert all pages with correct content from intru.in
 INSERT OR IGNORE INTO pages (slug, title, content, meta_title, meta_description, is_active) VALUES 
-  ('brand-story', 'Our Brand Story', 
-   '# Welcome to INTRU
-
-Built from scratch with a shared love for minimalism & everyday style.
-
-At INTRU, we believe that fashion should be effortless, timeless, and accessible. Our journey began with a simple idea: to create clothing that embodies minimalist aesthetics while celebrating individuality.
-
-## Our Philosophy
-
-We design pieces that transcend trends and seasons. Each item in our collection is carefully crafted to be versatile, comfortable, and stylish - perfect for the modern lifestyle.
-
-Every garment tells a story. From the careful selection of fabrics to the attention to detail in stitching, we pour our passion into creating pieces that you''ll reach for again and again.
-
-## Minimalism Meets Functionality
-
-In a world of fast fashion and fleeting trends, we champion slow fashion. Our minimalist approach isn''t about having less - it''s about having the right pieces that work seamlessly together, giving you more freedom and confidence in your everyday style.
-
-## Sustainability
-
-We are committed to sustainable practices, from sourcing materials to production. Every piece is made with care for both people and the planet. We believe that conscious fashion doesn''t have to compromise on style or quality.
-
-Our commitment extends beyond our products:
-- Ethical manufacturing processes
-- Sustainable material sourcing
-- Minimal packaging waste
-- Long-lasting quality over disposable fashion
-
-## Quality & Craftsmanship
-
-Each INTRU piece is designed to last. We work with skilled artisans who share our vision for quality and sustainability. From the first sketch to the final stitch, every step is executed with precision and care.
-
-## Join Our Community
-
-When you choose INTRU, you become part of a community that values quality, simplicity, and conscious living. We''re more than a brand - we''re a movement toward mindful consumption and timeless style.
-
-Share your INTRU moments with us on Instagram @intru.in and become part of our story.',
-   'Our Brand Story - INTRU | Minimalism & Everyday Style', 'Discover the story behind INTRU - built from scratch with a shared love for minimalism & everyday style. Quality, sustainability, and timeless design.', 1),
+  ('brand-story', 'Our Story', 
+   '<div class="prose max-w-none">
+      <h1 class="text-4xl font-bold mb-8">Welcome to INTRU</h1>
+      <p class="text-xl text-gray-700 mb-6">Built from scratch with a shared love for minimalism & everyday style.</p>
+      
+      <p class="text-gray-700 mb-6">At INTRU, we believe that fashion should be effortless, timeless, and accessible. Our journey began with a simple idea: to create clothing that embodies minimalist aesthetics while celebrating individuality.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Our Philosophy</h2>
+      <p class="text-gray-700 mb-6">We design pieces that transcend trends and seasons. Each item in our collection is carefully crafted to be versatile, comfortable, and stylish - perfect for the modern lifestyle.</p>
+      
+      <p class="text-gray-700 mb-6">Every garment tells a story. From the careful selection of fabrics to the attention to detail in stitching, we pour our passion into creating pieces that you''ll reach for again and again.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Minimalism Meets Functionality</h2>
+      <p class="text-gray-700 mb-6">In a world of fast fashion and fleeting trends, we champion slow fashion. Our minimalist approach isn''t about having less - it''s about having the right pieces that work seamlessly together, giving you more freedom and confidence in your everyday style.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Sustainability</h2>
+      <p class="text-gray-700 mb-6">We are committed to sustainable practices, from sourcing materials to production. Every piece is made with care for both people and the planet.</p>
+      
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>Ethical manufacturing processes</li>
+        <li>Sustainable material sourcing</li>
+        <li>Minimal packaging waste</li>
+        <li>Long-lasting quality over disposable fashion</li>
+      </ul>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Quality & Craftsmanship</h2>
+      <p class="text-gray-700 mb-6">Each INTRU piece is designed to last. We work with skilled artisans who share our vision for quality and sustainability. From the first sketch to the final stitch, every step is executed with precision and care.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Join Our Community</h2>
+      <p class="text-gray-700">When you choose INTRU, you become part of a community that values quality, simplicity, and conscious living. Share your INTRU moments with us on Instagram @intru.in and become part of our story.</p>
+    </div>',
+   'Our Story - INTRU | Minimalism & Everyday Style', 'Discover the story behind INTRU - built from scratch with a shared love for minimalism & everyday style.', 1),
   
-  ('terms-and-conditions', 'Terms and Conditions', 
-   '# Terms and Conditions
-
-**Last updated:** February 2026
-
-## 1. Introduction
-
-Welcome to INTRU ("we," "us," or "our"). These terms and conditions outline the rules and regulations for the use of INTRU''s website and services located at intru.in.
-
-By accessing this website, we assume you accept these terms and conditions. Do not continue to use intru.in if you do not agree to all of the terms and conditions stated on this page.
-
-## 2. Acceptance of Terms
-
-By using our services, you confirm that you accept these Terms and Conditions and that you agree to comply with them. If you do not agree to these terms, you must not use our website or services.
-
-## 3. Products and Services
-
-### 3.1 Product Availability
-- All products are subject to availability
-- We reserve the right to limit quantities of products
-- Product images are for illustration purposes; actual products may vary slightly
-- Prices are subject to change without notice
-
-### 3.2 Product Information
-We strive to ensure product descriptions, images, and pricing are accurate. However, we do not warrant that product descriptions or other content is accurate, complete, reliable, current, or error-free.
-
-## 4. Orders and Payment
-
-### 4.1 Placing Orders
-- Orders are subject to acceptance and availability
-- We reserve the right to refuse or cancel any order for any reason
-- You will receive order confirmation via email
-
-### 4.2 Payment Processing
-- Payment is processed securely through Razorpay
-- We accept major credit/debit cards and UPI payments
-- All prices are in Indian Rupees (₹)
-- You must provide current, complete, and accurate purchase information
-
-### 4.3 Order Confirmation
-After placing an order, you will receive:
-- An acknowledgment email confirming receipt of your order
-- A confirmation email once your order is processed
-- Shipping confirmation with tracking details
-
-## 5. Shipping and Delivery
-
-### 5.1 Shipping Policy
-- Standard shipping: 5-7 business days
-- Express shipping: 2-3 business days
-- Free shipping on orders above ₹2,000
-- Shipping charges apply for orders below ₹2,000
-
-### 5.2 Delivery
-- Delivery times are estimates and not guaranteed
-- We are not responsible for delays caused by courier services or force majeure events
-- You must provide accurate shipping information
-
-## 6. Returns and Exchanges
-
-Please refer to our [Return & Exchange Policy](/returns) for detailed information about returns, exchanges, and refunds.
-
-Key points:
-- 7-day return window from delivery date
-- Products must be unused, unwashed, and in original condition
-- Free size exchanges subject to availability
-- Refunds processed within 5-7 business days
-
-## 7. Intellectual Property
-
-### 7.1 Content Ownership
-The content, design, and branding on this website, including but not limited to text, graphics, logos, images, and software, are owned by INTRU and protected by copyright and intellectual property laws.
-
-### 7.2 Limited License
-You are granted a limited license to access and use our website for personal, non-commercial purposes. You may not:
-- Reproduce, duplicate, copy, or resell any part of our website
-- Use our trademarks or branding without written permission
-- Modify or create derivative works from our content
-
-## 8. User Accounts
-
-### 8.1 Account Creation
-- You may create an account to access certain features
-- You are responsible for maintaining account confidentiality
-- You must provide accurate and complete information
-- You are responsible for all activities under your account
-
-### 8.2 Account Security
-- Keep your password secure and confidential
-- Notify us immediately of any unauthorized access
-- We are not liable for losses due to stolen or compromised passwords
-
-## 9. Privacy and Data Protection
-
-Your use of our website is also governed by our [Privacy Policy](/privacy). By using our services, you consent to the collection and use of information as described in our Privacy Policy.
-
-## 10. Limitation of Liability
-
-### 10.1 Disclaimer
-To the maximum extent permitted by law, INTRU shall not be liable for:
-- Indirect, incidental, special, or consequential damages
-- Loss of profits, data, or business opportunities
-- Damages arising from the use or inability to use our products or services
-
-### 10.2 Maximum Liability
-Our total liability to you for all claims arising from your use of our website or products shall not exceed the amount you paid for the specific product(s) in question.
-
-## 11. Indemnification
-
-You agree to indemnify, defend, and hold harmless INTRU, its officers, directors, employees, and agents from any claims, liabilities, damages, losses, and expenses arising from your use of our website or violation of these terms.
-
-## 12. Third-Party Links
-
-Our website may contain links to third-party websites. We are not responsible for:
-- The content or practices of third-party websites
-- Any damages or losses caused by third-party services
-- The accuracy or reliability of third-party information
-
-## 13. Governing Law
-
-These Terms and Conditions are governed by and construed in accordance with the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts of Telangana, India.
-
-## 14. Changes to Terms
-
-We reserve the right to modify these terms at any time. We will notify you of significant changes by:
-- Posting a notice on our website
-- Sending an email to registered users
-- Updating the "Last updated" date
-
-Your continued use of our services after changes constitutes acceptance of the revised terms.
-
-## 15. Severability
-
-If any provision of these Terms and Conditions is found to be unenforceable or invalid, that provision will be limited or eliminated to the minimum extent necessary, and the remaining provisions will remain in full force and effect.
-
-## 16. Entire Agreement
-
-These Terms and Conditions, together with our Privacy Policy and Return & Exchange Policy, constitute the entire agreement between you and INTRU regarding the use of our website and services.
-
-## 17. Contact Us
-
-For any questions regarding these terms, please contact us at:
-
-**INTRU**  
-Email: venkatpradeep2@gmail.com  
-Address: 1-34/1, Chinna Mangalaram, Telangana 501504, India
-
----
-
-By using intru.in, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.',
-   'Terms and Conditions - INTRU', 'Read our terms and conditions for using INTRU website and services. Comprehensive legal terms covering orders, payments, shipping, and user rights.', 1),
+  ('returns', 'Returns & Exchanges', 
+   '<div class="prose max-w-none">
+      <h1 class="text-4xl font-bold mb-8">Returns & Exchanges</h1>
+      
+      <div class="bg-amber-50 border-l-4 border-amber-500 p-6 mb-8">
+        <p class="text-lg font-medium">Every piece is thoughtfully crafted and packed with care.</p>
+      </div>
+      
+      <p class="text-gray-700 mb-6">While we don''t offer returns or exchanges for sizing or personal preference—especially since sizes are subject to availability due to limited stock—we''re always here to help if something isn''t quite right.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">When We Accept Returns/Exchanges</h2>
+      <p class="text-gray-700 mb-4">We accept returns and exchanges <strong>only</strong> for the following reasons:</p>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li><strong>Damaged items:</strong> Products that arrive with manufacturing defects or damage</li>
+        <li><strong>Defective items:</strong> Items that have quality issues or don''t meet our standards</li>
+        <li><strong>Wrong item:</strong> If you received an incorrect product</li>
+      </ul>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">How to Request an Exchange</h2>
+      <ol class="list-decimal pl-6 text-gray-700 mb-6 space-y-2">
+        <li><strong>Contact us within 36 hours</strong> of receiving your delivery</li>
+        <li>Email us at <a href="mailto:shop@intru.in" class="text-black font-medium underline">shop@intru.in</a></li>
+        <li>Include your <strong>order number</strong> and <strong>clear photos</strong> of the issue</li>
+        <li>Keep the item <strong>unused</strong> in its original packaging with all tags attached</li>
+      </ol>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Conditions for Returns/Exchanges</h2>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>Item must be unused and in its original condition</li>
+        <li>Original packaging, tags, and labels must be intact</li>
+        <li>Item must not be washed, worn, or altered</li>
+        <li>Request must be made within 36 hours of delivery</li>
+        <li>Proof of purchase (order confirmation) required</li>
+      </ul>
+      
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mt-8">
+        <h3 class="font-semibold mb-2">Need Help?</h3>
+        <p class="text-gray-700">If you have any questions about our exchange policy, please contact us at <a href="mailto:shop@intru.in" class="text-black font-medium underline">shop@intru.in</a> or <a href="mailto:support@intru.in" class="text-black font-medium underline">support@intru.in</a>.</p>
+      </div>
+    </div>',
+   'Returns & Exchanges - INTRU', 'Learn about INTRU''s returns and exchanges policy for damaged, defective, or wrong items.', 1),
+  
+  ('shipping', 'Shipping Policy', 
+   '<div class="prose max-w-none">
+      <h1 class="text-4xl font-bold mb-8">Shipping Policy</h1>
+      
+      <div class="grid md:grid-cols-2 gap-8 mb-8">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h2 class="text-2xl font-semibold mb-4"><i class="fas fa-clock text-gray-600 mr-2"></i>Processing Time</h2>
+          <p class="text-gray-700">Orders are processed within <strong>1-2 business days</strong>. Orders placed on weekends or holidays will be processed the next business day.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h2 class="text-2xl font-semibold mb-4"><i class="fas fa-shipping-fast text-gray-600 mr-2"></i>Delivery Time</h2>
+          <ul class="text-gray-700 space-y-2">
+            <li><strong>Metro cities:</strong> 3-5 business days</li>
+            <li><strong>Other locations:</strong> 4-7 business days</li>
+          </ul>
+        </div>
+      </div>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Shipping Coverage</h2>
+      <p class="text-gray-700 mb-6">We currently ship only within <strong>India</strong>. Shipping to all major cities and towns is available.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Shipping Charges</h2>
+      <div class="bg-green-50 border-l-4 border-green-500 p-6 mb-6">
+        <p class="text-lg font-medium">We offer <strong>FREE SHIPPING</strong> on all orders across India! 🎉</p>
+      </div>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Order Tracking</h2>
+      <p class="text-gray-700 mb-6">Once your order ships, you''ll receive a tracking number via email. Use this number to monitor your delivery status on the courier''s website.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Issues with Delivery</h2>
+      <p class="text-gray-700 mb-4">If you experience any issues with your delivery, please:</p>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>Contact us at <a href="mailto:shop@intru.in" class="text-black font-medium underline">shop@intru.in</a> within <strong>48 hours</strong> of the expected delivery date</li>
+        <li>Provide your order number and tracking details</li>
+        <li>Include photos if the package appears damaged</li>
+      </ul>
+      
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mt-8">
+        <h3 class="font-semibold mb-2">Questions?</h3>
+        <p class="text-gray-700">For any shipping-related queries, reach out to us at <a href="mailto:shop@intru.in" class="text-black font-medium underline">shop@intru.in</a> or <a href="mailto:support@intru.in" class="text-black font-medium underline">support@intru.in</a>.</p>
+      </div>
+    </div>',
+   'Shipping Policy - INTRU', 'Learn about INTRU''s shipping policy, delivery times, and free shipping across India.', 1),
+  
+  ('faq', 'Frequently Asked Questions', 
+   '<div class="prose max-w-none">
+      <h1 class="text-4xl font-bold mb-8">Frequently Asked Questions</h1>
+      
+      <div class="space-y-6">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-xl font-semibold mb-3"><i class="fas fa-question-circle text-gray-600 mr-2"></i>How long does order processing take?</h3>
+          <p class="text-gray-700">Orders are processed within 1-2 business days. You''ll receive a confirmation email once your order ships with tracking information.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-xl font-semibold mb-3"><i class="fas fa-map-marker-alt text-gray-600 mr-2"></i>How can I track my order?</h3>
+          <p class="text-gray-700">Once your order ships, you''ll receive a tracking number via email. Use this number to track your package on the courier''s website. Delivery typically takes 3-5 business days for metro cities and 4-7 business days for other locations.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-xl font-semibold mb-3"><i class="fas fa-times-circle text-gray-600 mr-2"></i>Can I cancel or change my order?</h3>
+          <p class="text-gray-700">Please contact us at <a href="mailto:shop@intru.in" class="text-black font-medium underline">shop@intru.in</a> immediately if you need to cancel or modify your order. Once shipped, orders cannot be cancelled. However, you may be able to refuse delivery and we''ll process a refund once the item is returned to us.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-xl font-semibold mb-3"><i class="fas fa-exchange-alt text-gray-600 mr-2"></i>What is your exchange policy?</h3>
+          <p class="text-gray-700">We accept exchanges only for damaged, defective, or wrong items. Please contact us within 36 hours of delivery with your order number and photos. Visit our <a href="/returns" class="text-black font-medium underline">Returns & Exchanges</a> page for full details. Note: We don''t accept returns or exchanges for sizing or personal preference due to limited stock availability.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-xl font-semibold mb-3"><i class="fas fa-globe text-gray-600 mr-2"></i>Do you ship internationally?</h3>
+          <p class="text-gray-700">Currently, we only ship within India. We''re working on expanding our shipping to international destinations in the future.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-xl font-semibold mb-3"><i class="fas fa-rupee-sign text-gray-600 mr-2"></i>Do you charge for shipping?</h3>
+          <p class="text-gray-700">No! We offer <strong>FREE SHIPPING</strong> on all orders across India. No minimum order value required.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-xl font-semibold mb-3"><i class="fas fa-credit-card text-gray-600 mr-2"></i>What payment methods do you accept?</h3>
+          <p class="text-gray-700">We accept all major payment methods through Razorpay, including credit/debit cards, UPI, net banking, and digital wallets. All transactions are secure and encrypted.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-xl font-semibold mb-3"><i class="fas fa-box text-gray-600 mr-2"></i>What if my item is out of stock?</h3>
+          <p class="text-gray-700">Due to our focus on quality and limited production runs, some items may go out of stock. If an item you want is unavailable, please contact us at <a href="mailto:shop@intru.in" class="text-black font-medium underline">shop@intru.in</a> to inquire about restocks.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-xl font-semibold mb-3"><i class="fas fa-envelope text-gray-600 mr-2"></i>How do I contact customer support?</h3>
+          <p class="text-gray-700">You can reach us at:</p>
+          <ul class="list-disc pl-6 text-gray-700 mt-2 space-y-1">
+            <li>Email: <a href="mailto:shop@intru.in" class="text-black font-medium underline">shop@intru.in</a></li>
+            <li>Support: <a href="mailto:support@intru.in" class="text-black font-medium underline">support@intru.in</a></li>
+            <li>Instagram: <a href="https://instagram.com/intru.in" class="text-black font-medium underline" target="_blank">@intru.in</a></li>
+          </ul>
+          <p class="text-gray-700 mt-2">We typically respond within 24 hours during business days.</p>
+        </div>
+      </div>
+      
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mt-8">
+        <h3 class="font-semibold mb-2">Still have questions?</h3>
+        <p class="text-gray-700">Feel free to reach out to us at <a href="mailto:support@intru.in" class="text-black font-medium underline">support@intru.in</a> and we''ll be happy to help!</p>
+      </div>
+    </div>',
+   'FAQ - INTRU', 'Find answers to frequently asked questions about ordering, shipping, exchanges, and more at INTRU.', 1),
+  
+  ('terms', 'Terms & Conditions', 
+   '<div class="prose max-w-none">
+      <h1 class="text-4xl font-bold mb-8">Terms & Conditions</h1>
+      <p class="text-gray-600 mb-8">Last updated: ' || datetime('now') || '</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">1. General</h2>
+      <p class="text-gray-700 mb-4">By accessing and using the INTRU website (intru.in), you accept and agree to be bound by these Terms and Conditions. If you disagree with any part of these terms, please do not use our website.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">2. Products & Pricing</h2>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>All product descriptions, prices, and availability are subject to change without notice</li>
+        <li>We reserve the right to limit quantities of products offered</li>
+        <li>Prices are in Indian Rupees (INR) and include applicable taxes</li>
+        <li>Product images are for illustration purposes and may vary slightly from actual products</li>
+      </ul>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">3. Orders & Payment</h2>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>Orders are processed within 1-2 business days</li>
+        <li>We accept payments through Razorpay (cards, UPI, net banking, wallets)</li>
+        <li>All transactions are secure and encrypted</li>
+        <li>We reserve the right to refuse or cancel any order</li>
+      </ul>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">4. Shipping & Delivery</h2>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>Free shipping across India</li>
+        <li>Delivery times: 3-5 days for metro cities, 4-7 days for other locations</li>
+        <li>We are not responsible for delays caused by courier services</li>
+        <li>Please verify your shipping address before placing an order</li>
+      </ul>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">5. Returns & Exchanges</h2>
+      <p class="text-gray-700 mb-4">Please refer to our <a href="/returns" class="text-black font-medium underline">Returns & Exchanges Policy</a> for detailed information. In summary:</p>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>Exchanges accepted only for damaged, defective, or wrong items</li>
+        <li>Contact us within 36 hours of delivery</li>
+        <li>No returns/exchanges for sizing or personal preference</li>
+      </ul>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">6. Intellectual Property</h2>
+      <p class="text-gray-700 mb-6">All content on this website, including text, graphics, logos, images, and software, is the property of INTRU and protected by copyright laws. Unauthorized use is prohibited.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">7. Limitation of Liability</h2>
+      <p class="text-gray-700 mb-6">INTRU shall not be liable for any indirect, incidental, special, or consequential damages arising from the use of our products or website.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">8. Privacy</h2>
+      <p class="text-gray-700 mb-6">Your privacy is important to us. Please review our <a href="/privacy" class="text-black font-medium underline">Privacy Policy</a> to understand how we collect and use your information.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">9. Changes to Terms</h2>
+      <p class="text-gray-700 mb-6">We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting on the website. Continued use of the site constitutes acceptance of modified terms.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">10. Governing Law</h2>
+      <p class="text-gray-700 mb-6">These terms shall be governed by and construed in accordance with the laws of India.</p>
+      
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mt-8">
+        <h3 class="font-semibold mb-2">Questions?</h3>
+        <p class="text-gray-700">If you have any questions about these Terms & Conditions, please contact us at <a href="mailto:support@intru.in" class="text-black font-medium underline">support@intru.in</a>.</p>
+      </div>
+    </div>',
+   'Terms & Conditions - INTRU', 'Read INTRU''s terms and conditions for using our website and purchasing our products.', 1),
   
   ('privacy-policy', 'Privacy Policy', 
-   '# Privacy Policy
-
-**Last updated:** October 12, 2025
-
-This Privacy Policy describes how INTRU ("the Site", "we", "us", or "our") collects, uses, and discloses your personal information when you visit, use our services, or make a purchase from intru.in (the "Site") or otherwise communicate with us regarding the Site (collectively, the "Services").
-
-For purposes of this Privacy Policy, "you" and "your" means you as the user of the Services, whether you are a customer, website visitor, or another individual whose information we have collected pursuant to this Privacy Policy.
-
-**Please read this Privacy Policy carefully.** By using and accessing any of the Services, you agree to the collection, use, and disclosure of your information as described in this Privacy Policy. If you do not agree to this Privacy Policy, please do not use or access any of the Services.
-
-## Changes to This Privacy Policy
-
-We may update this Privacy Policy from time to time, including to reflect changes to our practices or for other operational, legal, or regulatory reasons. We will post the revised Privacy Policy on the Site, update the "Last updated" date and take any other steps required by applicable law.
-
-## How We Collect and Use Your Personal Information
-
-To provide the Services, we collect personal information about you from a variety of sources, as set out below. The information that we collect and use varies depending on how you interact with us.
-
-In addition to the specific uses set out below, we may use information we collect about you to communicate with you, provide or improve the Services, comply with any applicable legal obligations, enforce any applicable terms of service, and to protect or defend the Services, our rights, and the rights of our users or others.
-
-## What Personal Information We Collect
-
-The types of personal information we obtain about you depends on how you interact with our Site and use our Services. When we use the term "personal information", we are referring to information that identifies, relates to, describes or can be associated with you.
-
-### Information We Collect Directly from You
-
-Information that you directly submit to us through our Services may include:
-
-- **Contact details** including your name, address, phone number, and email
-- **Order information** including your name, billing address, shipping address, payment confirmation, email address, and phone number
-- **Account information** including your username, password, security questions and other information used for account security purposes
-- **Customer support information** including the information you choose to include in communications with us
-
-Some features of the Services may require you to directly provide us with certain information about yourself. You may elect not to provide this information, but doing so may prevent you from using or accessing these features.
-
-### Information We Collect About Your Usage
-
-We may also automatically collect certain information about your interaction with the Services ("**Usage Data**"). To do this, we may use cookies, pixels and similar technologies ("**Cookies**"). Usage Data may include information about how you access and use our Site and your account, including device information, browser information, information about your network connection, your IP address and other information regarding your interaction with the Services.
-
-### Information We Obtain from Third Parties
-
-We may obtain information about you from third parties, including:
-
-- Companies who support our Site and Services, such as Shopify
-- Our payment processors (Razorpay), who collect payment information to process your orders
-- Third-party authentication providers (Google, Instagram) when you use social login features
-
-Any information we obtain from third parties will be treated in accordance with this Privacy Policy.
-
-## How We Use Your Personal Information
-
-- **Providing Products and Services:** We use your personal information to process your orders, fulfill transactions, send order confirmations, arrange shipping, and manage your account
-
-- **Marketing and Advertising:** We may use your information to send marketing communications and show you advertisements for products or services
-
-- **Security and Fraud Prevention:** We use your personal information to detect and prevent fraudulent or malicious activity
-
-- **Communicating with You:** We use your information to provide customer support and improve our Services
-
-## Cookies
-
-Like many websites, we use Cookies on our Site to power and improve our Services, run analytics, and better understand user interaction. Most browsers automatically accept Cookies by default, but you can choose to set your browser to remove or reject Cookies through your browser controls.
-
-**Please note:** Removing or blocking Cookies may negatively impact your user experience and may cause some features to work incorrectly or no longer be available.
-
-## How We Disclose Personal Information
-
-We may disclose your personal information to third parties for legitimate purposes, including:
-
-- **Service Providers:** Vendors who perform services on our behalf (IT management, payment processing, data analytics, customer support, cloud storage, fulfillment and shipping)
-
-- **Business Partners:** Marketing partners who help us provide services and advertise to you
-
-- **Legal Compliance:** To comply with applicable legal obligations, respond to subpoenas, enforce our terms of service, and protect our rights and the rights of our users
-
-### Categories of Personal Information Disclosed
-
-| Category | Recipients |
-|----------|-----------|
-| Identifiers (contact details, account information) | Service providers, business partners, affiliates |
-| Commercial information (order information, shopping data) | Service providers, business partners |
-| Internet activity (Usage Data) | Service providers, business partners |
-| Geolocation data | Service providers |
-
-## Third-Party Authentication
-
-When you sign in using Google or Instagram, we receive basic profile information as permitted by those services. We do not store your passwords from these third-party services.
-
-## Third Party Websites and Links
-
-Our Site may provide links to websites or platforms operated by third parties. We are not responsible for the privacy or security of such sites. You should review their privacy policies before providing any information.
-
-## Children''s Data
-
-The Services are not intended to be used by children under 16 years of age. We do not knowingly collect personal information from children. If you are a parent or guardian and believe we have collected information about your child, please contact us.
-
-## Security and Retention
-
-We implement reasonable security measures to protect your personal information. However, please be aware that no security measures are perfect or impenetrable. We recommend that you do not use insecure channels to communicate sensitive information to us.
-
-We retain your personal information as long as necessary to maintain your account, provide the Services, comply with legal obligations, resolve disputes, and enforce our policies.
-
-## Your Rights
-
-Depending on your location, you may have rights regarding your personal information, including:
-
-- **Right to Access:** Request access to personal information we hold about you
-- **Right to Delete:** Request deletion of your personal information
-- **Right to Correct:** Request correction of inaccurate information
-- **Right to Portability:** Receive a copy of your personal information
-- **Withdrawal of Consent:** Withdraw consent where we rely on it
-- **Right to Appeal:** Appeal our decision if we decline your request
-- **Communication Preferences:** Opt out of promotional emails
-
-To exercise these rights, please contact us using the details below. We will respond in a timely manner as required by law.
-
-## International Users
-
-Your personal information may be transferred to, stored, and processed in countries other than your own. If we transfer your information out of Europe, we will rely on recognized transfer mechanisms like Standard Contractual Clauses.
-
-## Contact Us
-
-For questions about our privacy practices, to exercise your rights, or for any privacy-related concerns, please contact us:
-
-**Email:** venkatpradeep2@gmail.com  
-**Address:** 1-34/1, Chinna Mangalaram, Telangana 501504, India
-
----
-
-We take your privacy seriously and are committed to protecting your personal information. Thank you for trusting INTRU.',
-   'Privacy Policy - INTRU', 'Learn how INTRU collects, uses, and protects your personal information. Comprehensive privacy policy covering data collection, cookies, user rights, and security.', 1),
-  
-  ('return-and-exchange', 'Return & Exchange Policy', 
-   '# Return & Exchange Policy
-
-## Easy Returns & Exchanges
-
-At INTRU, we want you to love your purchase. If you''re not completely satisfied, we offer hassle-free returns and exchanges within **7 days** of delivery.
-
-## Return Policy
-
-### Eligibility Criteria
-
-To be eligible for a return, your item must meet the following conditions:
-
-- ✅ Returned within **7 days** of delivery date
-- ✅ Products must be **unworn, unwashed**, and in **original condition**
-- ✅ Original tags must be **attached** and intact
-- ✅ Items must be in **original packaging**
-- ✅ Include the **original invoice** or proof of purchase
-
-### Non-Returnable Items
-
-The following items cannot be returned:
-
-- ❌ Sale items marked as "**Final Sale**"
-- ❌ Items damaged due to **misuse or negligence**
-- ❌ Products **without original tags**
-- ❌ Worn, washed, or altered items
-- ❌ Items not in original packaging
-
-## Exchange Policy
-
-### Size Exchanges
-
-We offer **free size exchanges** within 7 days of delivery:
-
-- Subject to stock availability
-- Item must be in original condition with tags attached
-- One size exchange per item
-- We''ll arrange pickup and send the replacement
-
-### How to Request an Exchange
-
-1. **Email us** at venkatpradeep2@gmail.com within 7 days
-2. **Provide** your order number and reason for exchange
-3. **Send photos** of the item with tags visible
-4. We''ll **arrange pickup** from your address
-5. Your **replacement** will be shipped once we receive the returned item
-
-## Refund Process
-
-### Refund Timeline
-
-- Refunds are processed within **5-7 business days** after receiving the returned item
-- Amount will be credited to your **original payment method**
-- You will receive **email confirmation** when the refund is processed
-
-### Refund Amount
-
-- **Full refund** for defective, damaged, or incorrect items
-- **Product cost** refunded for voluntary returns
-- **Shipping charges** are non-refundable (unless item is defective or incorrect)
-- **Exchange shipping** is free for the first exchange
-
-## How to Initiate a Return
-
-### Step 1: Contact Us
-
-Email us at **venkatpradeep2@gmail.com** with:
-
-- Your **order number**
-- Item(s) you wish to return
-- **Reason** for return
-- **Photos** of the product (if defective or incorrect)
-
-### Step 2: Return Authorization
-
-We''ll send you:
-
-- Return authorization within **24 hours**
-- Return instructions
-- Pickup schedule details
-
-### Step 3: Pack the Item
-
-- Pack the item securely in **original packaging**
-- Include **original tags** and **invoice**
-- Ensure the package is properly sealed
-
-### Step 4: Pickup Arrangement
-
-- We''ll arrange **free pickup** from your address
-- Keep the package ready for pickup
-- Pickup will be scheduled within **2-3 business days**
-
-### Step 5: Refund Processing
-
-- Refund initiated once item is received and inspected
-- Amount credited within **5-7 business days**
-- You''ll receive email confirmation
-
-## Defective or Incorrect Items
-
-If you receive a defective, damaged, or incorrect item:
-
-### Immediate Action
-
-1. **Contact us immediately** - don''t wait
-2. **Send clear photos** showing the issue
-3. **Keep all packaging** and materials
-
-### Our Response
-
-- We''ll arrange **free pickup** immediately
-- Send a **replacement** or **full refund** (your choice)
-- **Full refund including shipping** if replacement is unavailable
-- No questions asked for genuine defects
-
-### What We Cover
-
-- ✅ Manufacturing defects
-- ✅ Damaged in transit
-- ✅ Wrong item sent
-- ✅ Wrong size sent
-- ✅ Missing items
-- ✅ Quality issues
-
-## Exchange vs Return
-
-| Scenario | Exchange | Return & Refund |
-|----------|----------|-----------------|
-| Wrong size ordered | ✅ Free exchange | ✅ Refund (minus shipping) |
-| Defective item | ✅ Free replacement | ✅ Full refund |
-| Don''t like the fit | ✅ Size exchange | ✅ Refund (minus shipping) |
-| Changed mind | ❌ No exchange | ✅ Refund (minus shipping) |
-| Item damaged | ✅ Free replacement | ✅ Full refund |
-
-## Important Notes
-
-### Inspection Process
-
-- All returned items are **inspected** upon receipt
-- Items must meet return eligibility criteria
-- Refunds processed only after successful inspection
-- We reserve the right to refuse returns that don''t meet criteria
-
-### Pickup Responsibilities
-
-- Please keep the package ready for pickup
-- Ensure someone is available at the address
-- If pickup is missed, we''ll reschedule once
-- Multiple missed pickups may incur return shipping charges
-
-### Refund Method
-
-- Refunds are credited to the **same payment method** used for purchase
-- Bank transfers may take 5-7 business days
-- UPI/Wallet refunds are usually instant
-- Credit card refunds may take 7-10 business days depending on your bank
-
-## Contact Us
-
-Have questions about returns or exchanges?
-
-**Email:** venkatpradeep2@gmail.com  
-**Response Time:** Within 24 hours  
-**Address:** 1-34/1, Chinna Mangalaram, Telangana 501504, India
-
-We''re here to help make your return or exchange process as smooth as possible!
-
----
-
-*This policy is subject to change. Please check this page for updates. Last updated: February 2026*',
-   'Return & Exchange Policy - INTRU', 'Easy returns and exchanges within 7 days. Learn about our hassle-free return policy, free size exchanges, and refund process at INTRU.', 1);
+   '<div class="prose max-w-none">
+      <h1 class="text-4xl font-bold mb-8">Privacy Policy</h1>
+      <p class="text-gray-600 mb-8">Last updated: ' || datetime('now') || '</p>
+      
+      <p class="text-gray-700 mb-6">At INTRU, we value your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">1. Information We Collect</h2>
+      <h3 class="text-xl font-medium mt-4 mb-3">Personal Information</h3>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>Name, email address, and phone number</li>
+        <li>Shipping and billing addresses</li>
+        <li>Payment information (processed securely through Razorpay)</li>
+        <li>Order history and preferences</li>
+      </ul>
+      
+      <h3 class="text-xl font-medium mt-4 mb-3">Automatically Collected Information</h3>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>IP address and browser type</li>
+        <li>Device information</li>
+        <li>Pages visited and time spent on site</li>
+        <li>Referring website addresses</li>
+      </ul>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">2. How We Use Your Information</h2>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>Process and fulfill your orders</li>
+        <li>Communicate with you about your orders and account</li>
+        <li>Send promotional emails (with your consent)</li>
+        <li>Improve our website and customer experience</li>
+        <li>Detect and prevent fraud</li>
+        <li>Comply with legal obligations</li>
+      </ul>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">3. Information Sharing</h2>
+      <p class="text-gray-700 mb-4">We do not sell or rent your personal information to third parties. We may share your information with:</p>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li><strong>Service Providers:</strong> Payment processors (Razorpay), shipping companies, and email services</li>
+        <li><strong>Legal Compliance:</strong> When required by law or to protect our rights</li>
+      </ul>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">4. Data Security</h2>
+      <p class="text-gray-700 mb-6">We implement industry-standard security measures to protect your personal information. All payment transactions are encrypted and processed through secure payment gateways. However, no method of transmission over the internet is 100% secure.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">5. Cookies</h2>
+      <p class="text-gray-700 mb-6">We use cookies and similar technologies to enhance your browsing experience, analyze site traffic, and personalize content. You can manage cookie preferences through your browser settings.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">6. Your Rights</h2>
+      <p class="text-gray-700 mb-4">You have the right to:</p>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-2">
+        <li>Access and update your personal information</li>
+        <li>Request deletion of your data</li>
+        <li>Opt-out of marketing communications</li>
+        <li>Object to data processing</li>
+      </ul>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">7. Data Retention</h2>
+      <p class="text-gray-700 mb-6">We retain your personal information for as long as necessary to fulfill the purposes outlined in this policy, comply with legal obligations, and resolve disputes.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">8. Children''s Privacy</h2>
+      <p class="text-gray-700 mb-6">Our website is not intended for children under 13. We do not knowingly collect personal information from children.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">9. Changes to This Policy</h2>
+      <p class="text-gray-700 mb-6">We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated date.</p>
+      
+      <h2 class="text-2xl font-semibold mt-8 mb-4">10. Contact Us</h2>
+      <p class="text-gray-700 mb-4">If you have any questions or concerns about this Privacy Policy, please contact us:</p>
+      <ul class="list-disc pl-6 text-gray-700 mb-6 space-y-1">
+        <li>Email: <a href="mailto:support@intru.in" class="text-black font-medium underline">support@intru.in</a></li>
+        <li>Email: <a href="mailto:shop@intru.in" class="text-black font-medium underline">shop@intru.in</a></li>
+      </ul>
+      
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mt-8">
+        <p class="text-gray-700">By using our website, you consent to this Privacy Policy.</p>
+      </div>
+    </div>',
+   'Privacy Policy - INTRU', 'Learn how INTRU collects, uses, and protects your personal information.', 1);
