@@ -1,330 +1,383 @@
 # INTRU E-commerce Store
 
-**Built from scratch with a shared love for minimalism & everyday style.**
+**Version 1.2.0** - Complete e-commerce platform with dynamic security, role-based authentication, and comprehensive content management.
 
-A modern, lightweight e-commerce platform for INTRU fashion brand, built with Hono, Cloudflare Pages, and D1 Database.
+🌐 **Live Demo**: https://3000-igqor40n96dwkbvhea8k1-b32ec7bb.sandbox.novita.ai  
+📦 **GitHub**: https://github.com/Kbs-sol/intru-store  
+📧 **Contact**: shop@intru.in | support@intru.in
 
-## 🌐 Live Demo
+---
 
-**Sandbox Environment:** https://3000-igqor40n96dwkbvhea8k1-b32ec7bb.sandbox.novita.ai
+## ✨ Features
 
-## 🎯 Project Overview
+### 🛍️ Shopping Experience
+- ✅ Browse 6 curated products from intru.in
+- ✅ Product details with dual images and pricing
+- ✅ Add to cart functionality
+- ✅ **Razorpay Buy Now** integration (direct checkout)
+- ✅ Shopping cart with quantity management
+- ✅ Guest cart (localStorage) and user cart (D1 database)
+- ✅ Mobile-responsive product gallery
 
-INTRU is a minimalist e-commerce platform offering 6 curated fashion products with seamless shopping experience, secure authentication, and easy admin management.
+### 🔐 Authentication
+- ✅ **Google One Tap Login** (needs Client ID configuration)
+- ✅ **Instagram OAuth** (needs App credentials)
+- ✅ **Email Login** (magic link style)
+- ✅ 30-day session expiry
+- ✅ Secure session management with D1
+- ✅ Role-based access control (admin, customer)
 
-### Key Features
+### 🔒 Dynamic Security Toggle
+- ✅ **Phase 1 (Setup Mode)**: Master key access (`7Intru@`) for initial admin creation
+- ✅ **Phase 2 (Secure Mode)**: Auto-locks to email/OAuth login once admin exists
+- ✅ Session-based authentication
+- ✅ CSRF protection
+- ✅ Input validation and sanitization
 
-✅ **Complete E-commerce Functionality**
-- Product catalog with 6 initial products (T-shirts, Shirts, Crop Tees)
-- Shopping cart with localStorage (guest) and database (logged-in users) persistence
-- Razorpay payment integration with Buy Now links
-- Responsive design inspired by sabina.framer.wiki theme
+### 👑 Admin Dashboard
+- ✅ **Products Management**
+  - Add, edit, delete products
+  - Manage Razorpay Buy Now links
+  - Upload product images (URL-based)
+  - Toggle product visibility
+  - Stock management
+  
+- ✅ **Pages Management**
+  - Edit Terms & Conditions
+  - Edit Privacy Policy
+  - Edit Returns & Exchanges
+  - Edit Shipping Policy
+  - Edit FAQ
+  - Edit Brand Story
+  - SEO metadata (meta title, description)
 
-✅ **Multi-Provider Authentication**
-- 🔐 Google One Tap Sign-in
-- 📸 Instagram OAuth (ready for credentials)
-- ✉️ Email-based authentication
-- Session management with 30-day expiry
+### 📄 Content Pages
+- ✅ **Brand Story** - SEO-optimized with rich content
+- ✅ **Returns & Exchanges** - Comprehensive policy (damaged/defective/wrong items only)
+- ✅ **Shipping Policy** - Processing times, delivery estimates, free shipping info
+- ✅ **FAQ** - 9+ frequently asked questions with detailed answers
+- ✅ **Terms & Conditions** - Complete legal terms
+- ✅ **Privacy Policy** - GDPR-compliant privacy information
 
-✅ **Admin Dashboard**
-- Product management (Create, Update, Delete)
-- Page content management (T&C, Privacy Policy, Returns)
-- Real-time inventory tracking
-- Razorpay link management
+### 🎨 Design
+- ✅ **Glassmorphic Navigation** - Modern backdrop-blur header with gradient branding
+- ✅ Tailwind CSS styling
+- ✅ Font Awesome icons
+- ✅ Google Inter font
+- ✅ Mobile-first responsive design
+- ✅ Sabina-inspired minimalist theme
+- ✅ Smooth transitions and hover effects
 
-✅ **SEO-Optimized Pages**
-- Brand Story page with compelling narrative
-- Terms & Conditions
-- Privacy Policy
-- Return & Exchange Policy
-- Meta tags and descriptions for all pages
+### 🗄️ Data & Hosting
+- ✅ **Cloudflare D1** - SQLite database (free tier, 5GB limit)
+- ✅ **Cloudflare Pages** - Static hosting (free tier)
+- ✅ 8 database tables (users, products, orders, cart, pages, sessions)
+- ✅ 11 indexes for optimized queries
+- ✅ Foreign key constraints
+- ✅ Migration system for schema updates
 
-✅ **Modern Tech Stack**
-- **Backend:** Hono (lightweight web framework)
-- **Database:** Cloudflare D1 (SQLite)
-- **Hosting:** Cloudflare Pages (edge deployment)
-- **Frontend:** Vanilla JS + TailwindCSS
-- **Icons:** Font Awesome
-- **Payments:** Razorpay
+---
 
-## 📁 Project Structure
+## 🏗️ Tech Stack
 
-```
-webapp/
-├── src/
-│   └── index.tsx              # Main Hono application with all API routes
-├── public/
-│   └── static/
-│       ├── app.js            # Frontend JavaScript (cart, auth, admin)
-│       └── styles.css        # Custom CSS styling
-├── migrations/
-│   └── 0001_initial_schema.sql # Database schema
-├── seed.sql                   # Initial product and page data
-├── ecosystem.config.cjs       # PM2 configuration
-├── wrangler.jsonc            # Cloudflare configuration
-├── package.json              # Dependencies and scripts
-└── README.md                 # This file
-```
+| Layer | Technology |
+|-------|-----------|
+| **Backend Framework** | Hono 4.11.8 (lightweight, fast) |
+| **Database** | Cloudflare D1 (SQLite) |
+| **Frontend** | Vanilla JS + TailwindCSS (CDN) |
+| **Hosting** | Cloudflare Pages + Workers |
+| **Icons** | Font Awesome 6.4.0 |
+| **Fonts** | Google Inter |
+| **Payments** | Razorpay Buy Now links |
+| **Dev Server** | PM2 (daemon process) |
 
-## 🗄️ Database Schema
-
-### Tables
-- **users** - User accounts (email, OAuth providers)
-- **products** - Product catalog with prices and images
-- **orders** - Order history
-- **order_items** - Line items for orders
-- **cart_items** - Shopping cart persistence
-- **pages** - Dynamic content management
-- **sessions** - Authentication sessions
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 20+
-- npm
+- Node.js 18+
+- npm or pnpm
 - Wrangler CLI
+- Cloudflare account (for deployment)
 
 ### Local Development
 
-1. **Clone the repository**
-```bash
-git clone https://github.com/Kbs-sol/intru-store.git
-cd intru-store
-```
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/Kbs-sol/intru-store.git
+   cd intru-store
+   ```
 
-2. **Install dependencies**
-```bash
-npm install
-```
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-3. **Apply migrations**
-```bash
-npm run db:migrate:local
-```
+3. **Setup Database**
+   ```bash
+   # Apply migrations
+   npx wrangler d1 migrations apply intru-db --local
+   
+   # Seed with initial data
+   npx wrangler d1 execute intru-db --local --file=./seed.sql
+   ```
 
-4. **Seed database**
-```bash
-npm run db:seed
-```
+4. **Build Project**
+   ```bash
+   npm run build
+   ```
 
-5. **Build the project**
-```bash
-npm run build
-```
+5. **Start Development Server**
+   ```bash
+   pm2 start ecosystem.config.cjs
+   
+   # Check status
+   pm2 logs intru-store --nostream
+   ```
 
-6. **Start development server**
-```bash
-npm run dev:d1
-# or with PM2
-pm2 start ecosystem.config.cjs
-```
+6. **Access Application**
+   ```
+   http://localhost:3000
+   ```
 
-7. **Access the application**
-- Local: http://localhost:3000
-
-### Available Scripts
-
-```bash
-npm run dev              # Start Vite dev server
-npm run dev:sandbox      # Start wrangler dev server
-npm run dev:d1           # Start with D1 database
-npm run build            # Build for production
-npm run deploy:prod      # Deploy to Cloudflare Pages
-npm run db:migrate:local # Apply migrations locally
-npm run db:migrate:prod  # Apply migrations to production
-npm run db:seed          # Seed local database
-npm run db:reset         # Reset and reseed local database
-npm run clean-port       # Clean up port 3000
-npm run test             # Test local server
-```
-
-## 🔐 Authentication Setup
-
-### Google One Tap
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create OAuth 2.0 credentials
-3. Update `YOUR_GOOGLE_CLIENT_ID` in `src/index.tsx`
-
-### Instagram OAuth
-
-1. Go to [Meta Developers](https://developers.facebook.com/)
-2. Create Instagram App
-3. Configure OAuth redirect URI
-4. Update Instagram OAuth flow in `public/static/app.js`
-
-## 💳 Razorpay Integration
-
-1. Sign up at [Razorpay](https://razorpay.com/)
-2. Create payment buttons/links for each product
-3. Add Razorpay links in Admin Dashboard → Products
-
-## 📦 Deployment to Cloudflare Pages
-
-### Prerequisites
-1. Cloudflare account
-2. Wrangler CLI configured
-
-### Steps
-
-1. **Create D1 database**
-```bash
-npx wrangler d1 create intru-db
-```
-
-2. **Update wrangler.jsonc with database ID**
-```jsonc
-{
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "intru-db",
-      "database_id": "YOUR_DATABASE_ID"
-    }
-  ]
-}
-```
-
-3. **Apply migrations to production**
-```bash
-npm run db:migrate:prod
-```
-
-4. **Seed production database**
-```bash
-npx wrangler d1 execute intru-db --file=./seed.sql
-```
-
-5. **Deploy to Cloudflare Pages**
-```bash
-npm run deploy:prod
-```
-
-6. **Access your production site**
-- URL: `https://intru-store.pages.dev`
-
-## 🛠️ Admin Access
-
-**Default Admin Credentials:**
-- Email: `admin@intru.in`
-- Login via Email authentication
-
-**Admin Features:**
-- Product management
-- Page content editing
-- Stock tracking
-- Razorpay link management
-
-## 📊 Current Product Catalog
-
-| Product | Price | Original Price | Category |
-|---------|-------|----------------|----------|
-| Doodles T-Shirt | ₹999 | ₹1,499 | T-Shirts |
-| No Risk Porsche T-Shirt | ₹999 | ₹1,499 | T-Shirts |
-| Orange Puff Printed T-Shirt | ₹999 | ₹1,499 | T-Shirts |
-| Romanticise Crop Tee | ₹699 | ₹999 | Tops |
-| Stripe 18 Shirt | ₹1,099 | ₹1,699 | Shirts |
-| Summer Shirt | ₹999 | ₹1,599 | Shirts |
-
-## 🎨 Design Philosophy
-
-- **Minimalism First:** Clean, uncluttered interface
-- **Mobile Responsive:** Optimized for all screen sizes
-- **Fast Loading:** Lightweight assets and edge deployment
-- **Intuitive UX:** Easy navigation and checkout flow
-
-## 📈 Scalability & Future Enhancements
-
-### Current Free Tier Limits
-- **Cloudflare Pages:** Unlimited requests, 100,000 builds/month
-- **D1 Database:** 5GB storage, 5M reads/day, 100K writes/day
-- **Perfect for:** Small to medium e-commerce stores
-
-### Migration Path to Supabase/Firebase (When Needed)
-The application is designed with abstraction layers for easy migration:
-- **Database:** Switch from D1 to Supabase PostgreSQL
-- **Storage:** Move from R2 to Firebase Storage
-- **Auth:** Migrate to Supabase Auth or Firebase Auth
-
-## 🔄 Recommended Next Steps
-
-1. **Configure OAuth Providers**
-   - Add Google Client ID
-   - Setup Instagram App credentials
-
-2. **Add Razorpay Links**
-   - Create payment buttons for each product
-   - Update via Admin Dashboard
-
-3. **Customize Branding**
-   - Update brand story content
-   - Add more product images
-   - Customize colors in TailwindCSS
-
-4. **Setup Analytics**
-   - Add Google Analytics
-   - Track conversions
-   - Monitor user behavior
-
-5. **Email Integration**
-   - Setup Resend/SendGrid for order confirmations
-   - Implement magic link authentication
-
-6. **Enhanced Features**
-   - Product reviews
-   - Wishlist functionality
-   - Order tracking
-   - Newsletter signup
-
-## 🐛 Troubleshooting
-
-### Port 3000 in use
-```bash
-npm run clean-port
-```
-
-### Database reset
-```bash
-npm run db:reset
-```
-
-### Build errors
-```bash
-rm -rf node_modules dist .wrangler
-npm install
-npm run build
-```
-
-## 📝 Environment Variables
-
-Create `.dev.vars` for local development:
-```
-GOOGLE_CLIENT_ID=your_google_client_id
-INSTAGRAM_CLIENT_ID=your_instagram_client_id
-INSTAGRAM_CLIENT_SECRET=your_instagram_secret
-RAZORPAY_KEY_ID=your_razorpay_key
-```
-
-## 🤝 Contributing
-
-This is a custom implementation for INTRU. For suggestions or issues, please contact the development team.
-
-## 📄 License
-
-Proprietary - INTRU Fashion Brand
-
-## 👨‍💻 Development Team
-
-Built with ❤️ for INTRU by the development team.
-
-## 📞 Support
-
-For technical support or questions:
-- Email: support@intru.in
-- GitHub Issues: [Create Issue](https://github.com/Kbs-sol/intru-store/issues)
+7. **Create First Admin**
+   - Navigate to `http://localhost:3000/setup`
+   - Email: admin@intru.in
+   - Name: Admin
+   - Master Key: `7Intru@`
+   - Click "Create Admin Account"
 
 ---
 
-**Last Updated:** February 8, 2026
-**Version:** 1.0.0
-**Status:** ✅ Production Ready
+## 🔐 Admin Setup
+
+### Initial Setup (No Admin Exists)
+
+1. Go to `/setup` page
+2. Enter:
+   - Email (e.g., admin@intru.in)
+   - Name
+   - Master Key: `7Intru@`
+3. Click "Create Admin Account"
+
+### Regular Login (After Admin Created)
+
+1. Click user icon in header
+2. Login with email/Google/Instagram
+3. Access admin at `/admin`
+
+**Full documentation**: See [ADMIN_SETUP.md](./ADMIN_SETUP.md)
+
+---
+
+## 📦 Database Schema
+
+### Tables
+- **users** - User accounts with roles
+- **sessions** - Authentication sessions
+- **products** - Product catalog
+- **orders** - Customer orders
+- **order_items** - Order line items
+- **cart_items** - Shopping cart
+- **pages** - CMS pages
+- **sessions** - Auth sessions (30-day expiry)
+
+### Key Relationships
+```
+users (1) → (N) orders
+users (1) → (N) cart_items
+orders (1) → (N) order_items
+products (1) → (N) order_items
+products (1) → (N) cart_items
+```
+
+---
+
+## 🌍 Deployment
+
+### Cloudflare Pages Deployment
+
+**Full guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+**Quick Steps**:
+
+1. **Build**
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy**
+   ```bash
+   npx wrangler pages deploy dist --project-name intru-store
+   ```
+
+3. **Setup Production Database**
+   ```bash
+   # Apply migrations
+   npx wrangler d1 migrations apply intru-db --remote
+   
+   # Seed data
+   npx wrangler d1 execute intru-db --remote --file=./seed.sql
+   ```
+
+4. **Access Site**
+   ```
+   https://intru-store.pages.dev
+   ```
+
+5. **Create Admin**
+   - Go to `https://intru-store.pages.dev/setup`
+   - Complete setup with master key
+
+---
+
+## 📂 Project Structure
+
+```
+intru-store/
+├── src/
+│   ├── index.tsx              # Main Hono app with all routes
+│   └── index_backup.tsx       # Backup of previous version
+├── public/
+│   └── static/
+│       ├── app.js            # Frontend JavaScript
+│       └── styles.css        # Custom CSS
+├── migrations/
+│   ├── 0001_initial_schema.sql  # Database schema
+│   └── 0002_add_user_roles.sql  # Role-based auth
+├── .wrangler/                # Local D1 database (gitignored)
+├── ecosystem.config.cjs      # PM2 configuration
+├── wrangler.jsonc           # Cloudflare configuration
+├── package.json             # Dependencies & scripts
+├── seed.sql                 # Initial data
+├── README.md                # This file
+├── ADMIN_SETUP.md           # Admin setup guide
+├── DEPLOYMENT.md            # Deployment guide
+├── QUICKSTART.md            # Quick start guide
+├── SECURITY.md              # Security documentation
+├── CHANGELOG.md             # Version history
+└── IMPLEMENTATION.md        # Implementation details
+```
+
+---
+
+## 📜 Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start Vite dev server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run deploy` | Build and deploy to Cloudflare |
+| `npm run db:migrate:local` | Apply migrations locally |
+| `npm run db:migrate:prod` | Apply migrations to production |
+| `npm run db:seed` | Seed local database |
+| `npm run db:reset` | Reset local database |
+
+---
+
+## 🎯 Current Status
+
+### ✅ Completed Features
+- [x] 6 products catalog with images and pricing
+- [x] Add to cart functionality
+- [x] Razorpay Buy Now integration
+- [x] Google One Tap authentication (needs Client ID)
+- [x] Instagram OAuth (needs credentials)
+- [x] Email login system
+- [x] Admin dashboard with CRUD
+- [x] Product management (add, edit, delete)
+- [x] Page content management
+- [x] Razorpay link management
+- [x] SEO-optimized brand story
+- [x] Comprehensive policies (Returns, Shipping, FAQ, Terms, Privacy)
+- [x] Dynamic security toggle (Phase 1 & 2)
+- [x] Role-based access control
+- [x] Glassmorphic navigation
+- [x] Mobile-responsive design
+- [x] Free Cloudflare hosting
+- [x] D1 database integration
+- [x] GitHub repository
+
+### 🔄 Configuration Needed
+- [ ] Google OAuth Client ID
+- [ ] Instagram App credentials
+- [ ] Razorpay account & API keys
+- [ ] Custom domain (optional)
+- [ ] Email service for magic links (optional)
+
+### 🚀 Future Enhancements
+- [ ] Image upload for products (currently URL-based)
+- [ ] Order management system
+- [ ] Email notifications
+- [ ] Customer dashboard
+- [ ] Inventory management
+- [ ] Analytics integration
+- [ ] Multiple admin roles (manager, editor)
+- [ ] Bulk product import/export
+
+---
+
+## 🎨 Design Philosophy
+
+INTRU follows a **minimalist, everyday style** inspired by:
+- Clean, uncluttered layouts
+- Neutral color palette (blacks, grays, whites)
+- High-quality product photography
+- Readable typography (Inter font)
+- Subtle animations and transitions
+- Mobile-first responsive design
+
+---
+
+## 📞 Contact & Support
+
+- **Email**: shop@intru.in, support@intru.in
+- **Instagram**: @intru.in
+- **GitHub**: https://github.com/Kbs-sol/intru-store
+- **Issues**: https://github.com/Kbs-sol/intru-store/issues
+
+---
+
+## 📄 License
+
+Copyright © 2024 INTRU. All rights reserved.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Hono** - Fast, lightweight web framework
+- **Cloudflare** - Free hosting and database
+- **TailwindCSS** - Utility-first CSS framework
+- **Font Awesome** - Icon library
+- **Razorpay** - Payment gateway
+
+---
+
+## 🔄 Version History
+
+### v1.2.0 (Current)
+- ✅ Fixed admin access with setup flow
+- ✅ Glassmorphic navigation design
+- ✅ Comprehensive shipping, FAQ, returns content
+- ✅ Dynamic security toggle (Phase 1 & 2)
+- ✅ Streamlined navigation (removed redundant links)
+- ✅ Exchange-focused returns policy
+
+### v1.1.0
+- ✅ Dynamic security toggle with master key
+- ✅ Role-based authentication
+- ✅ Enhanced page content from intru.in
+- ✅ Security documentation
+
+### v1.0.0
+- ✅ Initial release
+- ✅ 6 products, cart, auth, admin, pages
+- ✅ Cloudflare D1 integration
+- ✅ GitHub repository setup
+
+---
+
+**Built with ❤️ for minimalism & everyday style**
