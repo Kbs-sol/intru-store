@@ -134,12 +134,42 @@ const adminMiddleware = async (c: any, next: any) => {
   }, 401)
 }
 
-// Apply auth middleware to all routes EXCEPT setup
+// Apply auth middleware selectively - only to routes that need authentication
 app.use('*', async (c, next) => {
-  // Allow public access to setup page
-  if (c.req.path === '/setup' || c.req.path.startsWith('/api/setup')) {
+  const path = c.req.path
+  
+  // Public routes that don't need authentication
+  const publicRoutes = [
+    '/',
+    '/shipping',
+    '/returns',
+    '/faq',
+    '/terms',
+    '/contact',
+    '/privacy',
+    '/cart',
+    '/intruadmin',
+    '/intruadmin/setup',
+    '/setup'
+  ]
+  
+  const publicApiRoutes = [
+    '/api/products',
+    '/api/pages',
+    '/api/setup',
+    '/api/auth/login',
+    '/api/auth/me'
+  ]
+  
+  // Check if path matches any public route
+  const isPublicRoute = publicRoutes.some(route => path === route || path.startsWith(route))
+  const isPublicApi = publicApiRoutes.some(route => path.startsWith(route))
+  const isStaticFile = path.startsWith('/static/')
+  
+  if (isPublicRoute || isPublicApi || isStaticFile) {
     return await next()
   }
+  
   return authMiddleware(c, next)
 })
 
@@ -579,19 +609,9 @@ app.get('/cart', (c) => {
   return c.html(getLayout('Shopping Cart - INTRU', getPageTemplate('cart')))
 })
 
-// Admin dashboard
-app.get('/intruadmin', adminMiddleware, (c) => {
-  return c.html(getLayout('Admin Dashboard - INTRU', getPageTemplate('admin')))
-})
-
-// Admin setup page
-app.get('/intruadmin/setup', (c) => {
-  return c.html(getLayout('Admin Setup - INTRU', getPageTemplate('setup')))
-})
-
-// Backward compatibility redirect
-app.get('/setup', (c) => {
-  return c.redirect('/intruadmin/setup', 301)
+// Admin login/dashboard page (handles both login and dashboard)
+app.get('/intruadmin', (c) => {
+  return c.html(getLayout('Admin - INTRU', getPageTemplate('intruadmin')))
 })
 
 // ======================
@@ -780,87 +800,166 @@ const getPageTemplate = (page: string) => {
       return '<div id="privacy-page"></div>'
     case 'cart':
       return '<div id="cart-page"></div>'
-    case 'admin':
-      return '<div id="admin-page"></div>'
-    case 'setup':
+    case 'intruadmin':
       return `
-        <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-          <div class="max-w-md w-full space-y-8">
-            <div>
-              <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Setup Admin Account
-              </h2>
-              <p class="mt-2 text-center text-sm text-gray-600">
-                Create the first admin account to manage your store
-              </p>
+        <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black px-4">
+          <div class="max-w-md w-full">
+            <!-- Logo/Brand -->
+            <div class="text-center mb-8">
+              <h1 class="text-5xl font-bold text-white mb-2">INTRU</h1>
+              <p class="text-gray-400">Admin Access</p>
             </div>
-            <form id="setup-form" class="mt-8 space-y-6">
-              <div class="rounded-md shadow-sm -space-y-px">
-                <div>
-                  <label for="setup-email" class="sr-only">Email address</label>
-                  <input id="setup-email" name="email" type="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm" placeholder="Email address">
-                </div>
-                <div>
-                  <label for="setup-name" class="sr-only">Full name</label>
-                  <input id="setup-name" name="name" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm" placeholder="Full name">
-                </div>
-                <div>
-                  <label for="setup-password" class="sr-only">Master Key</label>
-                  <input id="setup-password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm" placeholder="Master Key: 7Intru@">
-                </div>
-              </div>
 
-              <div>
-                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
-                  Create Admin Account
-                </button>
-              </div>
+            <!-- Login Card -->
+            <div class="bg-white rounded-2xl shadow-2xl p-8">
+              <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Admin Login</h2>
               
-              <div id="setup-error" class="hidden text-red-600 text-sm text-center"></div>
-              <div id="setup-success" class="hidden text-green-600 text-sm text-center"></div>
-            </form>
+              <form id="admin-login-form" class="space-y-5">
+                <div>
+                  <label for="admin-email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <input 
+                    id="admin-email" 
+                    name="email" 
+                    type="email" 
+                    required 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    placeholder="admin@intru.in"
+                  >
+                </div>
+                
+                <div>
+                  <label for="admin-password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                  <input 
+                    id="admin-password" 
+                    name="password" 
+                    type="password" 
+                    required 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    placeholder="••••••••"
+                  >
+                </div>
+
+                <button 
+                  type="submit" 
+                  class="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-all transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                >
+                  Login
+                </button>
+                
+                <div id="admin-error" class="hidden text-red-600 text-sm text-center p-3 bg-red-50 rounded-lg"></div>
+                <div id="admin-success" class="hidden text-green-600 text-sm text-center p-3 bg-green-50 rounded-lg"></div>
+              </form>
+            </div>
+
+            <!-- Info Text -->
+            <div class="text-center mt-6">
+              <p class="text-gray-400 text-sm">Made in Bharat 🇮🇳</p>
+            </div>
           </div>
         </div>
         
         <script>
-          document.getElementById('setup-form').addEventListener('submit', async (e) => {
+          document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('setup-email').value;
-            const name = document.getElementById('setup-name').value;
-            const password = document.getElementById('setup-password').value;
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const errorEl = document.getElementById('admin-error');
+            const successEl = document.getElementById('admin-success');
             
-            if (password !== '7Intru@') {
-              document.getElementById('setup-error').textContent = 'Invalid master key';
-              document.getElementById('setup-error').classList.remove('hidden');
-              return;
-            }
+            // Hide previous messages
+            errorEl.classList.add('hidden');
+            successEl.classList.add('hidden');
             
             try {
-              const response = await fetch('/api/setup/create-admin', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, name, password })
-              });
+              // First, check if this is initial setup (master key auth)
+              const checkResponse = await fetch('/api/setup/check');
+              const checkData = await checkResponse.json();
               
-              const data = await response.json();
-              
-              if (response.ok) {
-                localStorage.setItem('session_token', data.sessionToken);
-                document.getElementById('setup-success').textContent = 'Admin created! Redirecting...';
-                document.getElementById('setup-success').classList.remove('hidden');
-                setTimeout(() => {
-                  window.location.href = '/intruadmin';
-                }, 1500);
+              if (checkData.setupNeeded && password === '7@Intru') {
+                // Initial setup - create first admin
+                const response = await fetch('/api/setup/create-admin', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email, name: email.split('@')[0], password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                  localStorage.setItem('session_token', data.sessionToken);
+                  successEl.textContent = 'Admin created! Redirecting to dashboard...';
+                  successEl.classList.remove('hidden');
+                  setTimeout(() => {
+                    location.href = '/intruadmin';
+                  }, 1000);
+                } else {
+                  errorEl.textContent = data.error || 'Setup failed';
+                  errorEl.classList.remove('hidden');
+                }
               } else {
-                document.getElementById('setup-error').textContent = data.error || 'Setup failed';
-                document.getElementById('setup-error').classList.remove('hidden');
+                // Normal login
+                const response = await fetch('/api/auth/login', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email, name: email.split('@')[0] })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                  localStorage.setItem('session_token', data.sessionToken);
+                  
+                  // Check if user is admin
+                  const meResponse = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': 'Bearer ' + data.sessionToken }
+                  });
+                  const userData = await meResponse.json();
+                  
+                  if (userData.user && userData.user.is_admin === 1) {
+                    successEl.textContent = 'Login successful! Loading dashboard...';
+                    successEl.classList.remove('hidden');
+                    setTimeout(() => {
+                      location.reload();
+                    }, 500);
+                  } else {
+                    errorEl.textContent = 'Access denied. Admin privileges required.';
+                    errorEl.classList.remove('hidden');
+                    localStorage.removeItem('session_token');
+                  }
+                } else {
+                  errorEl.textContent = 'Invalid credentials';
+                  errorEl.classList.remove('hidden');
+                }
               }
             } catch (error) {
-              document.getElementById('setup-error').textContent = 'Setup failed. Please try again.';
-              document.getElementById('setup-error').classList.remove('hidden');
+              errorEl.textContent = 'Login failed. Please try again.';
+              errorEl.classList.remove('hidden');
             }
           });
+
+          // Check if already logged in as admin
+          (async () => {
+            const token = localStorage.getItem('session_token');
+            if (token) {
+              try {
+                const response = await fetch('/api/auth/me', {
+                  headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await response.json();
+                if (data.user && data.user.is_admin === 1) {
+                  // Already logged in, show dashboard
+                  document.querySelector('.min-h-screen').innerHTML = '<div id="admin-page"></div>';
+                  // Load admin dashboard script
+                  const script = document.createElement('script');
+                  script.src = '/static/app.js';
+                  document.body.appendChild(script);
+                }
+              } catch (error) {
+                console.error('Auth check failed:', error);
+              }
+            }
+          })();
         </script>
       `
     default:
